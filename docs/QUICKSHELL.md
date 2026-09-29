@@ -19,10 +19,13 @@ margins and radii from `Theme.qml`.
 A floating (or attached) bar on every monitor. Any module can be **dragged** to another place or
 zone (left, centre, right): dragging starts after moving a few pixels with the button held, so a
 normal click still works. Settings → Personalization → QuickShell → Bar shows, hides and reorders
-modules and picks the style and clock.
+modules and picks the style and clock. It follows the same design as Settings and the menu: the
+clickable modules get a grey rounded background on hover (`BarHover`, like Settings' `IconButton`),
+what is active is red (the current workspace, like the chosen option) and its panels have the
+cards' radius (14).
 
-- **Workspaces** 1–5, always visible and the same on every bar. Filled: active here; outlined:
-  visible on another screen; dimmed: empty.
+- **Workspaces** 1–5, always visible and the same on every bar. Filled in red: active here; red
+  outline: visible on another screen; dimmed: empty.
 - **Media:** the MPRIS player. Clicking the title opens a panel with cover art, progress, controls
   and, when several apps are playing, which one to control.
 - **Date and time**, collapsible **tray**, **Wi-Fi** (opens a panel with the networks).

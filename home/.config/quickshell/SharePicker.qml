@@ -128,7 +128,7 @@ Scope {
                 anchors.centerIn: parent
                 width: Math.min(960, win.width - 80)
                 height: Math.min(580, win.height - 80)
-                radius: Theme.radius * 1.5
+                radius: Theme.cardRadius
                 color: Theme.bg
                 border.color: Theme.border
                 border.width: 1
@@ -183,14 +183,14 @@ Scope {
                                         required property var modelData
                                         readonly property bool active: root.tab === modelData.v
                                         width: tabLabel.implicitWidth + 24; height: 28; radius: 7
-                                        color: active ? Theme.accent : "transparent"
+                                        color: active ? Theme.sel : "transparent"
                                         Behavior on color { ColorAnimation { duration: 120 } }
                                         BarText {
                                             id: tabLabel
                                             anchors.centerIn: parent
                                             text: modelData.icon + "  " + modelData.label + (modelData.n >= 0 ? "  " + modelData.n : "")
                                             font.pixelSize: 12
-                                            color: parent.active ? Theme.accentText : Theme.fg
+                                            color: parent.active ? Theme.selText : Theme.fg
                                         }
                                         MouseArea {
                                             anchors.fill: parent
@@ -283,7 +283,7 @@ Scope {
                                 Layout.fillHeight: true
                                 radius: Theme.radius
                                 color: Theme.surface
-                                border.color: root.region ? Theme.accent : Theme.border
+                                border.color: root.region ? Theme.sel : Theme.border
                                 border.width: root.region ? 2 : 1
                                 clip: true
 

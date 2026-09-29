@@ -85,6 +85,11 @@ comes back or a decision needs its background. Dates are from September 2026.
   `/etc/locale.conf` (`scripts/locale.sh`, with `localectl`), and the shell and the scripts read it
   from that file, so they change at once. The Settings window title is now «Settings» (was
   «Ajustes», matched by `conf/rules.lua`).
+- **Bar aligned with Settings and the menu.** Clickable modules get a hover background
+  (`BarHover.qml`, like `IconButton`); the active workspace, the power menu's hover and the share
+  picker's selection and main button are red (`Theme.sel`) instead of white (`Theme.accent`, which
+  is now only the OSD level); the bar's panels use the cards' radius (14) instead of Hyprland's
+  rounding; same spacing (14) in every zone.
 - **Optional features in the installer.** New first module, `features`: `features.txt` groups
   what the desktop does not need (Bluetooth, printers + Avahi, Howdy, ASUS tools, DDC/CI, Flatpak,
   WebApps, Spotify, OCR, recording, fwupd) with its packages, services and `system/` files. They

@@ -13,6 +13,7 @@ BarText {
     text: muted ? "󰍭" : "󰍬"
     color: muted ? Theme.red : Theme.fg
 
+    BarHover {}
     MouseArea {
         anchors.fill: parent
         anchors.margins: -4

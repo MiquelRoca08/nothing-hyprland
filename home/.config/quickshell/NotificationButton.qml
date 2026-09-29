@@ -12,6 +12,7 @@ BarText {
         color: Theme.fg
         anchors { top: parent.top; right: parent.right; topMargin: 1; rightMargin: -3 }
     }
+    BarHover {}
     MouseArea {
         anchors.fill: parent
         anchors.margins: -4

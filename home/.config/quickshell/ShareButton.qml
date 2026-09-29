@@ -10,7 +10,7 @@ Rectangle {
     implicitHeight: 34
     radius: 9
     opacity: !enabled ? 0.4 : primary && bh.hovered ? 0.85 : 1
-    color: primary ? Theme.accent : bh.hovered ? Theme.surface : Theme.bg
+    color: primary ? (bh.hovered ? Theme.selHi : Theme.sel) : bh.hovered ? Theme.surface : Theme.bg
     border.color: Theme.border
     border.width: primary ? 0 : 1
     HoverHandler { id: bh; cursorShape: Qt.PointingHandCursor }
@@ -21,6 +21,6 @@ Rectangle {
         text: btn.text
         font.pixelSize: 12
         font.bold: btn.primary
-        color: btn.primary ? Theme.accentText : Theme.fg
+        color: btn.primary ? Theme.selText : Theme.fg
     }
 }

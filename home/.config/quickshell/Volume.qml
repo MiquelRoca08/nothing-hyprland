@@ -13,6 +13,7 @@ BarText {
     text: (muted ? "󰝟" : vol > 0.6 ? "󰕾" : vol > 0.25 ? "󰖀" : "󰕿") + " " + Math.round(vol * 100) + "%"
     color: muted ? Theme.dim : Theme.fg
 
+    BarHover {}
     MouseArea {
         anchors.fill: parent
         anchors.margins: -4

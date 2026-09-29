@@ -66,7 +66,7 @@ Item {
 
             Rectangle {
                 anchors.fill: parent
-                radius: Theme.radius
+                radius: Theme.cardRadius
                 color: Theme.bg
                 border.color: Theme.border
                 border.width: 1
@@ -85,7 +85,7 @@ Item {
                         ClippingRectangle {
                             implicitWidth: 84
                             implicitHeight: 84
-                            radius: Math.max(4, Theme.radius - 4)
+                            radius: Theme.cardRadius - 4
                             color: Theme.surface
                             BarText {
                                 anchors.centerIn: parent

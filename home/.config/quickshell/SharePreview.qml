@@ -20,7 +20,7 @@ Rectangle {
 
     radius: Theme.radius
     color: selected || hovered ? Theme.surface : Theme.bg
-    border.color: selected ? Theme.accent : hovered ? Theme.dim : Theme.border
+    border.color: selected ? Theme.sel : hovered ? Theme.dim : Theme.border
     border.width: selected ? 2 : 1
     Behavior on border.color { ColorAnimation { duration: 120 } }
 
@@ -83,8 +83,8 @@ Rectangle {
                 visible: pc.selected
                 anchors { top: parent.top; right: parent.right; margins: 8 }
                 width: 22; height: 22; radius: 11
-                color: Theme.accent
-                BarText { anchors.centerIn: parent; text: "󰄬"; color: Theme.accentText; font.pixelSize: 14 }
+                color: Theme.sel
+                BarText { anchors.centerIn: parent; text: "󰄬"; color: Theme.selText; font.pixelSize: 14 }
             }
         }
 

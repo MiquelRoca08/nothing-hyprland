@@ -48,7 +48,7 @@ Scope {
                     required property var modelData
                     Layout.fillWidth: true
                     implicitHeight: content.implicitHeight + 24
-                    radius: Theme.radius
+                    radius: Theme.cardRadius
                     color: Theme.bg
                     border.width: 1
                     border.color: modelData.urgency === NotificationUrgency.Critical ? Theme.red : Theme.border

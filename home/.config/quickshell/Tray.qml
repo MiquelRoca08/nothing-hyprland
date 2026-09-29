@@ -50,7 +50,7 @@ BarText {
 
             Rectangle {
                 anchors.fill: parent
-                radius: Theme.radius
+                radius: Theme.cardRadius
                 color: Theme.bg
                 border.color: Theme.border
                 border.width: 1

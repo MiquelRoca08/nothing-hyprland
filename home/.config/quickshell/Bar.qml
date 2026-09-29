@@ -96,7 +96,7 @@ PanelWindow {
         RowLayout {
             id: leftRow
             anchors { left: parent.left; leftMargin: bar.hug ? Theme.gap + 4 : 8; verticalCenter: parent.verticalCenter }
-            spacing: 16
+            spacing: 14
             Repeater { id: leftRep; model: Config.barLayout.left.map(k => ({ k })); delegate: modules }
         }
 

@@ -56,7 +56,8 @@ gets its Spanish in `i18n/es.js` (see «Language» in `docs/QUICKSHELL.md`).
   `FastWheel { flick: … }` inside (Qt's is very slow on Linux with wheel and touchpad) and, if it
   can be long, `ScrollBar { parent: theFlickable; flick: … }` (with `parent` the Flickable itself, so
   it does not move with the content). Do not build buttons or chips with `Rectangle` + `MouseArea`:
-  use those. What is still to do is `soon` in the tree (`SettingsSoon.qml` shows up with the
+  use those. **Bar:** a clickable module puts `BarHover {}` inside (grey background on hover, like
+  `IconButton`); what is active uses `Theme.sel`, and popups `Theme.cardRadius`. What is still to do is `soon` in the tree (`SettingsSoon.qml` shows up with the
   «Coming soon» label).
 - `Config.qml` (singleton) + `settings.json`: persistent settings edited by the Settings window
   (appearance, bar modules, keyboard/mouse/touchpad, lock, Do Not Disturb).

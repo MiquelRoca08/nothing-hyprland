@@ -37,7 +37,8 @@ Singleton {
     readonly property color selHi:      tc.selHi ?? "#ee2a33"       // hover of red things
     readonly property color selSoft:    tc.selSoft ?? "#240a0c"     // tinted background (selected row)
     readonly property color selText:    tc.selText ?? "#ffffff"     // text on red
-    // Bar accent (workspaces, OSD, power menu)
+    // Accent of levels (the OSD bar). What is active or selected (workspaces, power menu, share picker)
+    // uses sel, like Settings and the menu
     readonly property color accent:     tc.accent ?? "#ffffff"
     readonly property color accentText: tc.accentText ?? "#000000"
     readonly property int controlRadius: 8

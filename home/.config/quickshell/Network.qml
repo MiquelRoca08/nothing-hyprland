@@ -8,6 +8,7 @@ BarText {
         :                                      "󰤮"
     color: NetworkService.kind ? Theme.fg : Theme.dim
 
+    BarHover {}
     MouseArea {
         anchors.fill: parent
         anchors.margins: -4

@@ -18,6 +18,7 @@ Row {
         signal clicked
         color: active ? Theme.fg : Theme.dim
         font.pixelSize: 15
+        BarHover { padX: 5; visible: parent.active }
         MouseArea {
             anchors.fill: parent
             anchors.margins: -4
@@ -54,8 +55,10 @@ Row {
             return p.trackArtist ? `${title}  ·  ${p.trackArtist}` : title
         }
         color: root.player?.isPlaying ? Theme.fg : Theme.dim
+        BarHover {}
         MouseArea {
             anchors.fill: parent
+            anchors.margins: -4
             cursorShape: Qt.PointingHandCursor
             onClicked: panel.open = !panel.open
         }

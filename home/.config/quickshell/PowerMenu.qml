@@ -52,9 +52,10 @@ Scope {
                         required property var modelData
                         implicitWidth: 120
                         implicitHeight: 120
-                        radius: Theme.radius * 1.5
-                        color: hover.hovered ? Theme.surface : Theme.bg
-                        border.color: hover.hovered ? Theme.accent : Theme.border
+                        radius: Theme.cardRadius
+                        // on hover, like the chosen option of the menu: red-tinted background and red border
+                        color: hover.hovered ? Theme.selSoft : Theme.bg
+                        border.color: hover.hovered ? Theme.sel : Theme.border
                         border.width: 1
 
                         HoverHandler { id: hover; cursorShape: Qt.PointingHandCursor }
@@ -66,7 +67,7 @@ Scope {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 text: modelData.icon
                                 font.pixelSize: 40
-                                color: hover.hovered ? Theme.accent : Theme.fg
+                                color: hover.hovered ? Theme.sel : Theme.fg
                             }
                             BarText {
                                 anchors.horizontalCenter: parent.horizontalCenter

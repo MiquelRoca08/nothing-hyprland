@@ -3,6 +3,7 @@ import QtQuick
 
 BarText {
     text: "󰒓"
+    BarHover {}
     MouseArea {
         anchors.fill: parent
         anchors.margins: -4

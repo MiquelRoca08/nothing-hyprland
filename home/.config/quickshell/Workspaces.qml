@@ -1,6 +1,7 @@
 // Workspaces: always 1 to 5, plus any higher ones that exist; the same on
 // every bar. Click to go to one.
-//   blue fill: active on this screen · blue border: visible on another
+//   red fill: active on this screen (like the selected option in Settings and the menu)
+//   red border: visible on another
 //   normal text: with windows · dimmed: empty
 import Quickshell
 import Quickshell.Hyprland
@@ -38,15 +39,15 @@ Row {
             width: here ? 30 : 22
             height: 22
             radius: 11
-            color: here ? Theme.accent : Theme.surface
+            color: here ? Theme.sel : Theme.surface
             border.width: elsewhere ? 1.5 : 0
-            border.color: Theme.accent
+            border.color: Theme.sel
             Behavior on width { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
 
             BarText {
                 anchors.centerIn: parent
                 text: modelData
-                color: here ? Theme.accentText : occupied || elsewhere ? Theme.fg : Theme.dim
+                color: here ? Theme.selText : occupied || elsewhere ? Theme.fg : Theme.dim
                 font.pixelSize: 11
                 font.bold: here
             }
