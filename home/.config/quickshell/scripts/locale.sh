@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # The system locale is the interface language (Settings → System → Language). The shell (I18n.qml),
 # the menu and the scripts (i18n/i18n.sh) read LANG from /etc/locale.conf, so changing it here
-# changes all of them at once; other apps pick it up after logging out and back in.
+# changes all of them at once (walker is restarted: walker-config translates its config); other apps
+# pick it up after logging out and back in.
 #   locale.sh set en|es   run in a terminal (it asks for the password): generates the locale if it
 #                         is missing (/etc/locale.gen + locale-gen) and sets LANG with localectl,
 #                         keeping the LC_* lines of /etc/locale.conf
@@ -41,4 +42,6 @@ mapfile -t keep < <(grep -E '^LC_[A-Z_]+=' /etc/locale.conf 2>/dev/null | tr -d 
 sudo localectl set-locale "LANG=$target" "${keep[@]}" || exit 1
 # The user services (walker, elephant…) and what systemd starts from now on
 systemctl --user set-environment "LANG=$target" 2>/dev/null
+# walker reads its config once: restart it (walker.service rewrites config.toml in the new language)
+"$HOME/.local/bin/walker-restart" 2>/dev/null
 echo "$(t "System language: %s. The shell and the menu change now; other apps, after logging out and back in." "$target")"

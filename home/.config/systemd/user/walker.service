@@ -1,5 +1,5 @@
 [Unit]
-Description=Walker (servicio en segundo plano)
+Description=Walker (background service)
 After=graphical-session.target elephant.service
 Wants=elephant.service
 
@@ -8,6 +8,8 @@ Type=simple
 # GTK's OpenGL renderer. With cairo (Omarchy's, because of NVIDIA issues) remains of the previous
 # frame stayed when results changed (e.g. the dots of another entry's «i»s)
 Environment=GSK_RENDERER=ngl
+# config.toml in the interface language, from config.toml.template (the - : start even if it fails)
+ExecStartPre=-%h/.local/bin/walker-config
 ExecStart=walker --gapplication-service
 Restart=always
 RestartSec=2

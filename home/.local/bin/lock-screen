@@ -15,4 +15,15 @@ for _ in $(seq 20); do
     sleep 0.25
 done
 
-pidof hyprlock >/dev/null || exec hyprlock
+pidof hyprlock >/dev/null && exit 0
+# hyprlock in the interface language: a copy of hyprlock.conf with the placeholder translated, and
+# the system LANG for the date (Hyprland's environment keeps the one of the login)
+source "$HOME/.config/quickshell/i18n/i18n.sh" 2>/dev/null || t() { printf '%s' "$1"; }
+lang=$(sed -n 's/^LANG=//p' /etc/locale.conf 2>/dev/null | tr -d '"')
+[[ -n $lang ]] && export LANG=$lang LC_TIME=$lang
+conf="$XDG_RUNTIME_DIR/hyprlock.conf"
+if sed "s|^\([[:space:]]*placeholder_text[[:space:]]*=\).*|\1 $(t PASSWORD)|" \
+        "$HOME/.config/hypr/hyprlock.conf" >"$conf" 2>/dev/null; then
+    exec hyprlock -c "$conf"
+fi
+exec hyprlock

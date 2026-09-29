@@ -85,6 +85,10 @@ comes back or a decision needs its background. Dates are from September 2026.
   `/etc/locale.conf` (`scripts/locale.sh`, with `localectl`), and the shell and the scripts read it
   from that file, so they change at once. The Settings window title is now «Settings» (was
   «Ajustes», matched by `conf/rules.lua`).
+- **walker and hyprlock translated.** walker's "No results", "Restart walker" and "Search…" come
+  from `config.toml.template` through `walker-config` (run by `walker.service` on start; the
+  generated `config.toml` is not in git); the fallback hyprlock gets a translated copy of its
+  config ("PASSWORD") and the system `LANG` from `lock-screen`.
 - **`steam`, `rog-control-center` and `discord` left `conf/autostart.lua`** (they were the reference
   laptop's own apps): the repo only starts the desktop; personal apps go in `conf/autostart-local.lua`.
 

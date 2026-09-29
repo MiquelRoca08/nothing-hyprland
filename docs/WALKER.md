@@ -25,7 +25,10 @@ Files: `home/.config/walker/`, `home/.config/elephant/`, `home/.config/systemd/u
 - **PATH:** `conf/env.lua` adds `~/.local/bin` to Hyprland's `PATH` (without repeating it on
   reload) and `conf/autostart.lua` passes it to the services with `import-environment`: walker
   needs it for the menus and the emergency entry.
-- **Config:** `~/.config/walker/config.toml` only holds what differs from
+- **Config:** `~/.config/walker/config.toml.template` is the one to edit: `walker-config` writes
+  `config.toml` from it (not in git) with its `@…@` texts ("Search…", "No results", "Restart
+  walker") in the interface language, every time `walker.service` starts (`ExecStartPre`), since
+  walker's config has no translations and is read once. It only holds what differs from
   `/etc/xdg/walker/config.toml` (walker merges them): fixed focus, wrap-around selection, no hint
   bar, no F1–F4, emoji as a list, 256 results and a "Restart walker" emergency entry. Prefixes are
   walker's: `;` providers, `>` runner, `/` files, `.` symbols, `!` todo, `%` bookmarks,

@@ -511,6 +511,7 @@ var strings = {
     "No printing support": "No hay soporte de impresión",
     "No reboot needed.": "No hace falta reiniciar.",
     "No region chosen": "Ninguna región elegida",
+    "No results": "Sin resultados",
     "no session user": "sin usuario de sesión",
     "No sudo permission. Press a key to close…": "Sin permisos de sudo. Pulsa una tecla para cerrar…",
     "No text found": "No se ha encontrado texto",

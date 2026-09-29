@@ -1,12 +1,13 @@
 # Walker — only what differs from /etc/xdg/walker/config.toml (walker merges it with
-# its defaults). Prefixes: the usual ones (; > / . ! % = @ : $), untouched.
+# its defaults). Edit config.toml.template: ~/.local/bin/walker-config writes config.toml from it
+# (not in git) with the @…@ texts in the interface language, every time the walker service starts. Prefixes: the usual ones (; > / . ! % = @ : $), untouched.
 force_keyboard_focus = true # keyboard focus stays in walker
 selection_wrap = true       # wraps from the last entry to the first
 hide_action_hints = true    # no hint bar at the bottom
 theme = "nothing"           # themes/nothing/
 
 [placeholders]
-"default" = { input = "Search…", list = "No results" }   # walker-launch passes the translated input one
+"default" = { input = "@SEARCH@", list = "@NO_RESULTS@" }
 
 [keybinds]
 quick_activate = [] # no F1–F4
@@ -21,7 +22,7 @@ empty = ["desktopapplications"]
 
 # Shown if elephant does not answer
 [[emergencies]]
-text = "Restart walker"
+text = "@RESTART_WALKER@"
 command = "walker-restart"
 
 

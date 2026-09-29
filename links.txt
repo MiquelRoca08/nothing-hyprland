@@ -18,6 +18,7 @@
 .config/xdg-terminals.list
 .local/bin/walker-launch
 .local/bin/walker-restart
+.local/bin/walker-config
 .local/bin/menu
 .local/bin/screenshot
 .local/bin/record

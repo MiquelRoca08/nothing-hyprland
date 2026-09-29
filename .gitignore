@@ -18,6 +18,7 @@ private/
 privado/
 home/.config/quickshell/settings.json
 home/.config/hypr/xdph.conf
+home/.config/walker/config.toml
 # This machine's monitors and own autostart apps (install.sh creates them; see installer/hypr-import.py)
 home/.config/hypr/conf/monitors.lua
 home/.config/hypr/conf/autostart-local.lua

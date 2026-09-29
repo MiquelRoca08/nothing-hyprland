@@ -361,5 +361,8 @@ and the `i2c` group), `power-profiles-daemon`, `upower`, `wireplumber`, `zenity`
 - **Keybind descriptions** and `-- ## …` headings in `conf/keybinds.lua` are English and are
   translated where shown; a trailing number ("Go to workspace 3") is kept.
 - **Installer:** `./install.sh --lang en|es` (default: the system locale).
-- **Only in one language:** walker's "No results" (static in `config.toml`), the texts of
-  `hyprlock.conf`, and the Settings window title «Settings», which `conf/rules.lua` matches.
+- **walker and hyprlock** have no translations of their own: `walker-config` writes walker's
+  `config.toml` from a template in the interface language when its service starts (`locale.sh`
+  restarts it), and `lock-screen` runs the fallback hyprlock with a copy of `hyprlock.conf` whose
+  placeholder is translated and with the system `LANG` (for the date).
+- **Only in one language:** the Settings window title «Settings», which `conf/rules.lua` matches.
