@@ -77,7 +77,7 @@ at the end. Every module only does what is missing, so it is safe to run again a
 
 | Module | What it does |
 |---|---|
-| `features` | Lists the [optional features](features.txt) (Bluetooth, printers, Howdy, ASUS tools, DDC/CI, Flatpak, WebApps, Spotify, OCR, recording, firmware) and lets you leave some out: not installed (removed if they are, except packages other programs need), services not enabled, system files not copied. Saved in `excluded-features.txt` (not in git); the other modules follow it |
+| `features` | Lists the [optional features](features.txt) (Bluetooth, printers, Howdy, ASUS tools, DDC/CI, Flatpak, WebApps, Spotify, OCR, recording, firmware) in an fzf picker like the menu's Install / Remove (Tab marks several, details below) and lets you leave some out: not installed (removed if they are, except packages other programs need), services not enabled, system files not copied. Saved in `excluded-features.txt` (not in git); the other modules follow it |
 | `packages` | `pacman -Syu --needed` with [`packages.txt`](packages.txt) (also updates the system); lists every package with its size and the total first |
 | `aur` | `yay -S --needed` with [`packages-aur.txt`](packages-aur.txt); builds yay first if missing |
 | `services` | Enables NetworkManager, bluetooth, power-profiles-daemon, cups and avahi; adds you to the `i2c` group |

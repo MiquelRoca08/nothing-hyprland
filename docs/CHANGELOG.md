@@ -87,7 +87,8 @@ comes back or a decision needs its background. Dates are from September 2026.
   «Ajustes», matched by `conf/rules.lua`).
 - **Optional features in the installer.** New first module, `features`: `features.txt` groups
   what the desktop does not need (Bluetooth, printers + Avahi, Howdy, ASUS tools, DDC/CI, Flatpak,
-  WebApps, Spotify, OCR, recording, fwupd) with its packages, services and `system/` files. The
+  WebApps, Spotify, OCR, recording, fwupd) with its packages, services and `system/` files. They
+  are picked in fzf like the menu's Install / Remove (a numbered list if fzf is not installed yet). The
   ones you leave out go to `excluded-features.txt` (not in git): `packages`/`aur` skip their
   packages, `services` their services (and the i2c group for DDC/CI), `system` their files; if
   installed, their services are disabled and their packages removed with `pacman -Rns`, keeping

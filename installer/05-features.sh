@@ -25,8 +25,46 @@ remove_feature() {
     sudo pacman -Rns --noconfirm "${pkgs[@]}"
 }
 
+# Colors of the menu's package picker (~/.local/bin/packages): white and greys, red for removing
+FZF_COLORS='fg:#b0b0b0,fg+:#ffffff,bg+:#161616,hl:#ffffff,hl+:#ffffff,info:#6e6e6e,prompt:#ffffff,pointer:#d71921,marker:#d71921,spinner:#6e6e6e,header:#6e6e6e,border:#2e2e2e,label:#6e6e6e'
+
+# pick_fzf: like the menu's Install/Remove (fzf, Tab marks several, details below). Prints the ids
+# to leave out; returns 1 if cancelled (Esc: the current choice is kept)
+pick_fzf() {
+    local dir="$STATE/features" id p s n i=1 binds="load:" out
+    mkdir -p "$dir"
+    {
+        printf '%s\n\n' "$(t "Leave nothing out: keep every feature")"
+        t "Unmark everything (Tab) and accept this line."; echo
+    } >"$dir/-"
+    {
+        printf -- '-\t%s\n' "$(t "Leave nothing out: keep every feature")"
+        for id in "${ids[@]}"; do
+            i=$((i + 1))
+            is_excluded "$id" && binds+="pos($i)+toggle+"
+            n=$(installed_of "$id" | wc -l)
+            printf '%s\t%-56s\t%s\n' "$id" "$(t "$(feature_field "$id" 2)")" \
+                "$( ((n)) && t installed || t "not installed")"
+            {
+                printf '%s\n\n%s\n' "$(t "$(feature_field "$id" 2)")" "$(t "Packages:")"
+                for p in $(feature_field "$id" 3); do
+                    if pacman -Qq "$p" >/dev/null 2>&1; then printf '  ✓ %s\n' "$p"; else printf '  · %s\n' "$p"; fi
+                done
+                s=$(feature_field "$id" 4); [ -n "$s" ] && printf '%s\n%s\n' "$(t "Services:")" "$(printf '  %s\n' $s)"
+                s=$(feature_field "$id" 5); [ -n "$s" ] && printf '%s\n%s\n' "$(t "System files:")" "$(printf '  %s\n' $s)"
+            } >"$dir/$id"
+        done
+    } >"$dir/.list"
+    out=$(fzf --multi --reverse --prompt '  ' --delimiter '\t' --with-nth 2,3 --accept-nth 1 \
+        --header "$(t "Mark with Tab what you want to leave out · Enter accepts · Esc keeps the current choice")" \
+        --preview "cat $dir/{1}" --preview-label "$(t "alt-p: details · alt-j/k: scroll")" --preview-label-pos bottom \
+        --preview-window 'down:45%:wrap' --bind 'alt-p:toggle-preview' --bind 'alt-k:preview-up,alt-j:preview-down' \
+        --bind "${binds}first" --color "$FZF_COLORS" <"$dir/.list") || return 1
+    printf '%s\n' "$out" | grep -vx -- '-' || true
+}
+
 module() {
-    local ids=() id i n mark state line chosen=() new
+    local ids=() id i n mark state line out chosen=() new
     mapfile -t ids < <(feature_ids)
     echo
     for i in "${!ids[@]}"; do
@@ -39,7 +77,10 @@ module() {
     echo
     if [ -e "$STATE/yall" ]; then
         info "$(t "yes to all: the current choice is kept")"
+    elif command -v fzf >/dev/null; then
+        if out=$(pick_fzf); then mapfile -t chosen <<<"$out"; else mapfile -t chosen < <(excluded_ids); fi
     else
+        # Without fzf (a new install: the packages module comes later), a numbered list
         info "$(t "✗ = left out. Type the numbers of the ones you do NOT want (e.g. «1 3»): that replaces the choice.")"
         info "$(t "Enter keeps it as it is; «none» brings them all back; q quits.")"
         while :; do
@@ -57,6 +98,8 @@ module() {
             done
             break
         done
+    fi
+    if [ ! -e "$STATE/yall" ]; then
         new=$(printf '%s\n' "${chosen[@]}" | sed '/^$/d' | sort -u)
         if [ "$new" != "$(excluded_ids | sort -u)" ]; then
             if [ -n "$new" ]; then printf '%s\n' "$new" >"$EXCLUDED"; else rm -f "$EXCLUDED"; fi
