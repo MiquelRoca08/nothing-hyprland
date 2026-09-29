@@ -55,8 +55,8 @@ hl.window_rule({
 
 -- The shell's Settings window: floating, centered
 hl.window_rule({
-    name  = "qs-ajustes",
-    match = { title = "^Ajustes$" },
+    name  = "qs-settings",
+    match = { title = "^Settings$" },
     float  = true,
     center = true,
     size   = "1140 780",

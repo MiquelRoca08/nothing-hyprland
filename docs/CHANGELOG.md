@@ -80,6 +80,11 @@ comes back or a decision needs its background. Dates are from September 2026.
   `hyprland.lua` («cannot open …/hyprland.lua», no keybinds) and did not reload again. The repo's
   `.githooks/post-merge` (and `post-rewrite`) now run `hyprctl reload` when a pull changes
   `home/.config/hypr`; the `links` module enables them (`core.hooksPath`).
+- **The interface language is the system locale.** Settings → System → Language no longer has its
+  own setting (`language` in `settings.json`, with "Automatic"): it sets `LANG` in
+  `/etc/locale.conf` (`scripts/locale.sh`, with `localectl`), and the shell and the scripts read it
+  from that file, so they change at once. The Settings window title is now «Settings» (was
+  «Ajustes», matched by `conf/rules.lua`).
 - **`steam`, `rog-control-center` and `discord` left `conf/autostart.lua`** (they were the reference
   laptop's own apps): the repo only starts the desktop; personal apps go in `conf/autostart-local.lua`.
 

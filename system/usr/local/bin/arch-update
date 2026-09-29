@@ -196,9 +196,9 @@ fi
 if [[ $EUID -ne 0 ]]; then TARGET_USER=$(id -un); else TARGET_USER="${SUDO_USER:-}"; fi
 [[ $TARGET_USER == root ]] && TARGET_USER=""
 
-# Messages in the session user's language (the shell's dictionary); English without it
+# Messages in the system language (the shell's dictionary, found in the session user's home);
+# English without it
 I18N_HOME=$(getent passwd "${TARGET_USER:-root}" | cut -d: -f6)
-export I18N_HOME
 # shellcheck source=/dev/null
 source "$I18N_HOME/.config/quickshell/i18n/i18n.sh" 2>/dev/null ||
   t() { local s=$1; shift; if (($#)); then printf -- "$s" "$@"; else printf '%s' "$s"; fi; }

@@ -11,7 +11,7 @@ launcher/system menu, with a themed boot (Limine + UKI) and an interactive insta
 > lists them and what to adjust on other hardware. Read the installer's prompts before saying yes.
 
 *[Leer en español](README.es.md)* · Docs and code comments are in English; the shell's UI is in
-English or Spanish (Settings → System → Language).
+English or Spanish, following the system locale (Settings → System → Language sets it).
 
 ## Screenshots
 

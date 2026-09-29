@@ -13,7 +13,7 @@ UKI) y un instalador interactivo.
 > hardware. Lee lo que pregunta el instalador antes de decir que sí.
 
 *[Read in English](README.md)* · La documentación y los comentarios del código están en inglés; la
-interfaz del shell, en inglés o en español (Ajustes → Sistema → Idioma).
+interfaz del shell, en inglés o en español, según el locale del sistema (Ajustes → Sistema → Idioma lo cambia).
 
 ## Capturas
 

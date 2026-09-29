@@ -158,7 +158,7 @@ system's age (from the first line of `/var/log/pacman.log`, or the creation date
   [HYPRLAND.md](HYPRLAND.md#keybinds)), warns if another bind uses it and refuses a plain key
   without a modifier. Binds created in a loop (workspaces) and the whole file open in nvim at
   their line.
-- **Language:** Automatic, English or Español.
+- **Language:** English or Español: sets the system locale (see [Language](#language)).
 
 ### Connections
 
@@ -334,9 +334,15 @@ and the `i2c` group), `power-profiles-daemon`, `upower`, `wireplumber`, `zenity`
 ## Language
 
 - The shell's texts are in English in the code, wrapped in `I18n.tr("…")` (`I18n.qml`), and
-  `i18n/es.js` has the Spanish for each one. Settings → System → Language picks **Automatic**
-  (Spanish if `$LANG` is Spanish, English otherwise), English or Español; it is saved as `language`
-  in `settings.json` and applies at once, without restarting.
+  `i18n/es.js` has the Spanish for each one.
+- **The interface language is the system locale:** `LANG` in `/etc/locale.conf` (Spanish if
+  `es_*`, English otherwise). `I18n.qml` watches the file and `i18n/i18n.sh` reads it on every run,
+  so a change applies at once, without restarting. Settings → System → Language (English /
+  Español) runs `scripts/locale.sh set en|es` in a terminal: it generates the locale if it is not
+  (`/etc/locale.gen` + `locale-gen`; prefers an already generated one, else `es_ES`/`en_US`), sets it
+  with `localectl set-locale` keeping the `LC_*` lines, and updates the systemd user environment.
+  Apps already running, and those Hyprland starts, keep the old `LANG` until you log out and back in
+  (Hyprland cannot change its environment at runtime).
 - **Dates:** `I18n.locale` (`es_ES` or `en_GB`) and, for custom formats, a translatable format
   string (`I18n.tr("MMMM d, yyyy")`).
 - **Values and plurals:** `I18n.tr("%1 free").arg(size)`; `I18n.trn(n, "%1 app", "%1 apps")`.
@@ -349,11 +355,11 @@ and the `i2c` group), `power-profiles-daemon`, `upower`, `wireplumber`, `zenity`
 - **Scripts (bash)** use the same dictionary through `i18n/i18n.sh`: `source` it and call
   `t "English text"` (with values: `t "WebApp created: %s" "$name"`). Used by `menu`,
   `menu-keybinds`, `screenshot`, `record`, `webapp`, `tui`, `packages`, `walker-launch`,
-  `scripts/update.sh`, `scripts/snapshot.sh`, `arch-update` (as root it reads the session user's
-  settings through `I18N_HOME`) and the installer. The elephant Lua menus call it through `bash`.
+  `scripts/update.sh`, `scripts/snapshot.sh`, `scripts/locale.sh`, `arch-update` (as root it finds
+  the dictionary in the session user's home, `I18N_HOME`) and the installer. The elephant Lua menus call it through `bash`.
   In bash, a key ending in `\n` only works with values (printf); otherwise use `echo "$(t …)"`.
 - **Keybind descriptions** and `-- ## …` headings in `conf/keybinds.lua` are English and are
   translated where shown; a trailing number ("Go to workspace 3") is kept.
-- **Installer:** `./install.sh --lang en|es` (default: `$LANG`).
+- **Installer:** `./install.sh --lang en|es` (default: the system locale).
 - **Only in one language:** walker's "No results" (static in `config.toml`), the texts of
-  `hyprlock.conf`, and the Settings window title «Ajustes», which `conf/rules.lua` matches.
+  `hyprlock.conf`, and the Settings window title «Settings», which `conf/rules.lua` matches.

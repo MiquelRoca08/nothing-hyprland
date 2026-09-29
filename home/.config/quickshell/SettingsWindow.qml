@@ -21,7 +21,7 @@ Scope {
 
         FloatingWindow {
             id: win
-            title: "Ajustes"
+            title: "Settings"   // fixed (not translated): conf/rules.lua matches it
             implicitWidth: 1140
             implicitHeight: 780
             color: Theme.bg

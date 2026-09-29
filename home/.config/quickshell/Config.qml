@@ -225,8 +225,6 @@ Singleton {
             property int lockMinutes: 5
             property int screenOffMinutes: 10
             property int suspendMinutes: 0
-            // Interface language: "auto" (follows $LANG), "en" or "es" (I18n.qml)
-            property string language: "auto"
             // Notifications
             property bool dnd: false               // Do Not Disturb
         }
