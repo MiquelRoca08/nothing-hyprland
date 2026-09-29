@@ -115,6 +115,20 @@ replacing it, it keeps two things, written to files that are yours and not in gi
 Without a previous config, `conf/monitors.lua` is still created (from the running session or with
 the fallback rule only). Both files are only written if they do not exist yet: edit them freely.
 
+### Uninstalling
+
+Your home folder only gets **links** into this repo, so deleting the repo folder leaves them broken:
+Hyprland, the shell, the menu and the scripts lose their config, and your settings go with the folder
+(`settings.json`, `monitors.lua`, `autostart-local.lua` live in it). The system files copied to `/`
+and the packages stay. Autologin is safe even then: `autologin-session` only starts Hyprland if the
+config that locks it is there; otherwise greetd asks for the password.
+
+To undo it cleanly, run **`./install.sh uninstall`** (never part of a normal run). It stops the
+walker/elephant services, removes the links and puts back the `.bak` copies of what you had before,
+turns off greetd's autologin, removes the prompt line from `~/.bashrc`, the generated theme files
+and the GTK settings, and optionally goes back to SDDM and deletes the shell's data. Then log out
+and delete the folder if you want.
+
 ## First steps after installing
 
 1. **Reboot.** greetd logs you in and the lock screen appears at once: unlock with your password.

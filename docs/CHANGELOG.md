@@ -85,6 +85,12 @@ comes back or a decision needs its background. Dates are from September 2026.
   `/etc/locale.conf` (`scripts/locale.sh`, with `localectl`), and the shell and the scripts read it
   from that file, so they change at once. The Settings window title is now «Settings» (was
   «Ajustes», matched by `conf/rules.lua`).
+- **Safe autologin and `./install.sh uninstall`.** greetd's autologin now goes through
+  `/usr/local/bin/autologin-session`, which only starts Hyprland if the dotfiles' config that locks
+  the session is in place: deleting the repo folder used to leave an autologin with nothing to lock
+  it. New `uninstall` module (only by name): user services, links (restoring the `.bak` copies),
+  autologin, `~/.bashrc` prompt line, generated theme files, gsettings, and optionally SDDM and the
+  shell's data.
 - **Menu entries hidden when their program is missing:** Record, Text (OCR), Flatpak and Firmware
   (`REQUIRES` in `menu`); the keybinds that still reach them notify instead of failing silently.
 - **Bluetooth and Printers hidden when not installed.** Settings pages can say which package they

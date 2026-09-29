@@ -1,10 +1,12 @@
 # Autologin into Hyprland (uwsm); the shell's lock screen locks right after startup
-# (~/.config/hypr/conf/autostart.lua). After logging out: text login. install.sh fills in @USER@.
+# (~/.config/hypr/conf/autostart.lua). autologin-session only starts it if that config is in place:
+# otherwise (the dotfiles folder deleted) it exits and greetd asks for the password
+# (default_session). After logging out: text login. install.sh fills in @USER@.
 [terminal]
 vt = 1
 
 [initial_session]
-command = "uwsm start -e -D Hyprland hyprland.desktop"
+command = "/usr/local/bin/autologin-session"
 user = "@USER@"
 
 [default_session]

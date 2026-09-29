@@ -7,6 +7,8 @@
 #   ./install.sh                 every module
 #   ./install.sh aur links        only those (by name, without the number)
 #   ./install.sh --lang es       in Spanish (default: $LANG; en or es)
+#   ./install.sh uninstall       undo the dotfiles in your home folder (installer/uninstall.sh;
+#                                never part of a normal run)
 #   ./install.sh -h              this help and the module list
 #
 # New module: a file installer/NN-name.sh with TITLE, DESCRIPTION (one line each, in English, through
@@ -32,6 +34,7 @@ usage() {
     printf '  ./install.sh                 %s\n' "$(t "every module")"
     printf '  ./install.sh aur links        %s\n' "$(t "only those (by name, without the number)")"
     printf '  ./install.sh --lang es       %s\n' "$(t "in Spanish (en or es; by default, the system language)")"
+    printf '  ./install.sh uninstall       %s\n' "$(t "undo the dotfiles in your home folder (not part of a normal run)")"
     printf '  ./install.sh -h              %s\n' "$(t "this help")"
     echo
     t "y (or Enter) yes · n no: skip to the next module · yall yes to all · q quit"; echo
@@ -55,6 +58,7 @@ for a in "$@"; do
     -*) t "Unknown option: %s (./install.sh -h)\n" "$a" >&2; exit 1 ;;
     *)
         m=$(printf '%s\n' "${MODULES[@]}" | while read -r x; do [ "$(module_name "$x")" = "$a" ] && echo "$x"; done)
+        [ "$a" = uninstall ] && m=installer/uninstall.sh      # only by name: never in a normal run
         [ -n "$m" ] || { t "No module «%s» (./install.sh -h)\n" "$a" >&2; exit 1; }
         chosen+=("$m") ;;
     esac

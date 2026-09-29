@@ -117,6 +117,20 @@ pero antes de sustituirla conserva dos cosas, en archivos que son tuyos y no van
 Sin configuración anterior, `conf/monitors.lua` se crea igualmente (de la sesión en marcha o solo con
 la regla de respaldo). Los dos archivos solo se escriben si aún no existen: edítalos a tu gusto.
 
+### Desinstalar
+
+Tu carpeta personal solo recibe **enlaces** a este repo, así que si borras la carpeta del repo se
+quedan rotos: Hyprland, el shell, el menú y los scripts pierden su configuración, y tus ajustes se van
+con la carpeta (`settings.json`, `monitors.lua` y `autostart-local.lua` están dentro). Los archivos de
+sistema copiados a `/` y los paquetes se quedan. Aun así el autologin es seguro: `autologin-session`
+solo arranca Hyprland si está la configuración que lo bloquea; si no, greetd pide la contraseña.
+
+Para deshacerlo de forma limpia, ejecuta **`./install.sh uninstall`** (nunca entra en una ejecución
+normal). Para los servicios de walker/elephant, quita los enlaces y restaura las copias `.bak` de lo
+que tenías antes, desactiva el autologin de greetd, quita la línea del prompt de `~/.bashrc`, los
+archivos de tema generados y los ajustes de GTK y, si quieres, vuelve a SDDM y borra los datos del
+shell. Después cierra sesión y borra la carpeta si quieres.
+
 ## Primeros pasos después de instalar
 
 1. **Reinicia.** greetd inicia la sesión y aparece enseguida la pantalla de bloqueo: desbloquea con

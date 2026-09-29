@@ -1,0 +1,13 @@
+#!/bin/sh
+# greetd's autologin (initial_session in /etc/greetd/config.toml). It starts Hyprland only if the
+# dotfiles' config is in place, because that config is what locks the session right after starting
+# (conf/autostart.lua → ~/.local/bin/lock-screen). Without it (the repo folder deleted or moved, the
+# links broken) it exits instead, and greetd shows the password login (default_session): an
+# unlocked session is never opened.
+HOME=${HOME:-$(getent passwd "$(id -un)" | cut -d: -f6)}
+autostart="$HOME/.config/hypr/conf/autostart.lua"
+for f in "$HOME/.config/hypr/hyprland.lua" "$autostart" "$HOME/.local/bin/lock-screen"; do
+    [ -e "$f" ] || { echo "autologin-session: $f is missing: no autologin" >&2; exit 1; }
+done
+grep -q 'lock-screen' "$autostart" || { echo "autologin-session: autostart.lua does not lock: no autologin" >&2; exit 1; }
+exec uwsm start -e -D Hyprland hyprland.desktop

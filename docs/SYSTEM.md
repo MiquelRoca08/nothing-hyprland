@@ -89,15 +89,18 @@ There is no graphical display manager. **greetd** logs your user in automaticall
 first command locks the session with the shell's lock screen, so the lock screen *is* the login.
 
 - `/etc/greetd/config.toml` (template in `system/`): `initial_session` runs
-  `uwsm start -e -D Hyprland hyprland.desktop` as your user; after logging out, `default_session`
-  is a text login (`agreety`).
+  `/usr/local/bin/autologin-session` as your user, which starts `uwsm start -e -D Hyprland
+  hyprland.desktop` **only if the dotfiles' config is in place** (`hyprland.lua`, `autostart.lua`
+  running `lock-screen`, and `lock-screen` itself). Otherwise, e.g. if the repo folder was deleted
+  and the links are broken, it exits and greetd shows the password login: an unlocked session is
+  never opened. After logging out, `default_session` is a text login (`agreety`).
 - `conf/autostart.lua` runs `lock-screen` first. It locks with the shell and, if the shell does not
   answer within 5 s, with hyprlock. If locking fails, Hyprland stays locked (Wayland lock protocol).
 - **GNOME keyring:** `/etc/pam.d/greetd` starts it (`pam_gnome_keyring.so auto_start`) and
   `/etc/pam.d/quickshell-lock` (and `/etc/pam.d/hyprlock`) unlocks it with your password on the
   first unlock.
 - The `login` module disables SDDM if it is enabled and enables greetd. To go back:
-  `sudo systemctl disable greetd && sudo systemctl enable sddm`.
+  `sudo systemctl disable greetd && sudo systemctl enable sddm` (or `./install.sh uninstall`).
 - **Why not SDDM:** it runs on X11, and on hybrid-GPU laptops X11 can pick a GPU without a visible
   screen ([HARDWARE.md](HARDWARE.md#hybrid-graphics-amd-igpu--nvidia-dgpu)).
 - If Hyprland does not start: greetd's text login, or `Ctrl+Alt+F3` for a tty.
