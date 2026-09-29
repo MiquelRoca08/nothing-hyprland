@@ -18,7 +18,7 @@ SettingsPage {
     // When an update finishes (Terminal.run or update.sh notify), it counts again
     Connections {
         target: ShellState
-        function onSettingsChanged() { page.snapshotting = false; UpdateService.check(true) }
+        function onSettingsChanged() { page.snapshotting = false }   // UpdateService checks again by itself
     }
 
     property var expanded: ({})     // lists expanded in full (more than 12)

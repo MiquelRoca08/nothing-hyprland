@@ -85,6 +85,12 @@ comes back or a decision needs its background. Dates are from September 2026.
   `/etc/locale.conf` (`scripts/locale.sh`, with `localectl`), and the shell and the scripts read it
   from that file, so they change at once. The Settings window title is now «Settings» (was
   «Ajustes», matched by `conf/rules.lua`).
+- **Flatpak in `arch-update`.** The bar and Settings counted Flatpak updates, but `arch-update`
+  (what the menu and Settings → Updates run) only did pacman and the AUR, so they were never
+  applied and the count stayed. New step 7: `flatpak update` of the system installation (as root:
+  `packages flatpak` installs with sudo, and the desktop has no polkit agent) and of the user's
+  (as the user), then unused runtimes; `--no-flatpak` skips it. The Home count was also cached for
+  10 minutes: `UpdateService` now checks again whenever a Settings or menu terminal finishes.
 - **walker and hyprlock translated.** walker's "No results", "Restart walker" and "Search…" come
   from `config.toml.template` through `walker-config` (run by `walker.service` on start; the
   generated `config.toml` is not in git); the fallback hyprlock gets a translated copy of its

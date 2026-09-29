@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# arch-update — Arch Linux updater: Snapper snapshot + pacman + AUR.
+# arch-update — Arch Linux updater: Snapper snapshot + pacman + AUR + Flatpak.
 #
 # It follows Omarchy 4.0's update process, without its own layer (migrations,
 # post-update hooks, /usr/share/omarchy). It is the only thing that creates snapshots
@@ -11,9 +11,10 @@
 # Lives in ~/dotfiles/system/usr/local/bin/ → sudo install -Dm755 … /usr/local/bin/arch-update
 #
 # Usage (as root):
-#   sudo arch-update                -> asks, snapshot, repos + AUR, cleanup and checks
+#   sudo arch-update                -> asks, snapshot, repos + AUR + Flatpak, cleanup and checks
 #   sudo arch-update -y             -> without asking (orphans are not removed)
-#   sudo arch-update --no-aur       -> official repos only
+#   sudo arch-update --no-aur       -> without the AUR
+#   sudo arch-update --no-flatpak   -> without Flatpak
 #   sudo arch-update --no-snapshot  -> no Snapper snapshot
 #   arch-update --dry-run           -> only shows what it would do, runs nothing
 #   sudo arch-update --menu         -> as the menu launches it: when done it does not close, it waits
@@ -41,6 +42,7 @@ UKI="/boot/EFI/Linux/arch-linux.efi"
 
 ASSUME_YES=false
 DO_AUR=true
+DO_FLATPAK=true
 DO_SNAPSHOT=true
 DRY_RUN=false
 MENU=false
@@ -49,7 +51,7 @@ CANCELLED=false
 NEEDS_REBOOT=false
 BOOT_OK=true
 
-TOTAL_STEPS=10
+TOTAL_STEPS=11
 STEP=0
 FAILED=() # steps that failed without stopping the update
 
@@ -173,6 +175,7 @@ for arg in "$@"; do
   case "$arg" in
   -y | --yes) ASSUME_YES=true ;;
   --no-aur) DO_AUR=false ;;
+  --no-flatpak) DO_FLATPAK=false ;;
   --no-snapshot) DO_SNAPSHOT=false ;;
   --dry-run) DRY_RUN=true ;;
   --menu) MENU=true ;;
@@ -328,7 +331,33 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 7. Orphans: listed and asked about (no by default; not removed with -y)
+# 7. Flatpak: the system installation (what `packages flatpak` installs, with sudo) as root, and
+#    the user's own (--user) as the user. Then the runtimes no app uses anymore.
+#    Not in the snapshot's way: Flatpak lives in /var/lib/flatpak and ~/.local/share/flatpak.
+# ---------------------------------------------------------------------------
+step "Flatpak"
+if ! $DO_FLATPAK; then
+  skip "$(t "disabled with --no-flatpak")"
+elif ! command -v flatpak >/dev/null 2>&1; then
+  skip "$(t "flatpak is not installed")"
+else
+  FLATPAK_OK=true
+  if [[ -n $(flatpak list --system --columns=ref 2>/dev/null) ]]; then
+    run flatpak update --system -y --noninteractive || FLATPAK_OK=false
+    run flatpak uninstall --system -y --noninteractive --unused || true
+  fi
+  if [[ -n $TARGET_USER ]]; then
+    USER_ENV=(env XDG_RUNTIME_DIR="/run/user/$(id -u "$TARGET_USER")")
+    if [[ -n $(sudo -u "$TARGET_USER" -H "${USER_ENV[@]}" flatpak list --user --columns=ref 2>/dev/null) ]]; then
+      run sudo -u "$TARGET_USER" -H "${USER_ENV[@]}" flatpak update --user -y --noninteractive || FLATPAK_OK=false
+      run sudo -u "$TARGET_USER" -H "${USER_ENV[@]}" flatpak uninstall --user -y --noninteractive --unused || true
+    fi
+  fi
+  if $FLATPAK_OK; then ok; else fail "$(t "flatpak update failed")"; fi
+fi
+
+# ---------------------------------------------------------------------------
+# 8. Orphans: listed and asked about (no by default; not removed with -y)
 # ---------------------------------------------------------------------------
 step "$(t "Orphan packages")"
 ORPHANS=$(pacman -Qtdq 2>/dev/null || true)
@@ -347,7 +376,7 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 8. Boot: initramfs/UKI built and signed
+# 9. Boot: initramfs/UKI built and signed
 #    With Secure Boot, a UKI that fails to build or is left unsigned does not
 #    boot. The hooks' output ends up in pacman.log (ALPM-SCRIPTLET).
 # ---------------------------------------------------------------------------
@@ -396,7 +425,7 @@ if [[ -r /var/log/pacman.log ]] && ! $DRY_RUN; then
 fi
 
 # ---------------------------------------------------------------------------
-# 9. Restart the shell and walker/elephant (if something changed)
+# 10. Restart the shell and walker/elephant (if something changed)
 # ---------------------------------------------------------------------------
 step "$(t "Shell and launcher")"
 if $DRY_RUN; then
@@ -421,7 +450,7 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 10. Is a reboot needed?
+# 11. Is a reboot needed?
 # ---------------------------------------------------------------------------
 step "$(t Reboot)"
 REASONS=()

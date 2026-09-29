@@ -216,14 +216,17 @@ Updates run it for you in a floating terminal.
 | Option | Effect |
 |---|---|
 | `-y` | No questions (orphans are not removed) |
-| `--no-aur` | Official repositories only |
+| `--no-aur` | Without the AUR |
+| `--no-flatpak` | Without Flatpak |
 | `--no-snapshot` | No snapshot |
 | `--dry-run` | Shows what it would do |
 | `--menu` | As launched from the menu: when done it waits for a **Close** button (or **Reboot now** / **Later**) and exits with 200, so the launcher (`scripts/update.sh`) knows not to wait again |
 
 Steps: confirm → check 10 GiB free → `paccache -rk2` (before the snapshot, since the cache is
 inside it) → snapshot (if it fails, **it aborts**) → `archlinux-keyring` → `pacman -Syu` →
-`yay -Sua` as your user if there are AUR packages → orphans (asks) → checks that the UKI was
+`yay -Sua` as your user if there are AUR packages → Flatpak (`flatpak update` of the system
+installation as root and of your `--user` one as you, then `--unused` runtimes are removed) →
+orphans (asks) → checks that the UKI was
 rebuilt and everything is signed (if not, it warns **not to reboot**; unsigned files already known
 to sbctl are re-signed with `sbctl sign-all`) → restarts walker, elephant and the shell → offers a
 reboot if the kernel or Hyprland changed. It runs inside `systemd-inhibit`, logs to

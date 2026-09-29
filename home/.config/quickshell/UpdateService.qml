@@ -20,6 +20,13 @@ Singleton {
     // Total of what is known (not counting the -2)
     readonly property int total: Math.max(repo, 0) + Math.max(aur, 0) + Math.max(flatpak, 0)
 
+    // After a Settings or menu terminal (arch-update, flatpak, packages…) the counts may be stale:
+    // check again if they were ever checked
+    Connections {
+        target: ShellState
+        function onSettingsChanged() { if (root.checkedAt) root.check(true) }
+    }
+
     function check(force) {
         if (checking || (!force && checkedAt && Date.now() - checkedAt < 600000)) return
         repo = -1; aur = -1; flatpak = -1
