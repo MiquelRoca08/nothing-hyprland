@@ -31,6 +31,22 @@ nothing_to_do()  { printf '  %s✓ %s%s\n' "$G" "$(t "Nothing to do: %s" "$*")" 
 # Package names from a list file, without comments or empty lines
 read_list() { sed 's/#.*//; s/[[:space:]]//g; /^$/d' "$1"; }
 
+# --- Optional features (features.txt) and the ones you left out (excluded-features.txt, not in git) ---
+FEATURES="$DOT/features.txt"
+EXCLUDED="$DOT/excluded-features.txt"
+feature_ids() { sed 's/#.*//' "$FEATURES" | awk -F'|' 'NF >= 3 { gsub(/^[ \t]+|[ \t]+$/, "", $1); print $1 }'; }
+# feature_field id n: a column of features.txt (2 name, 3 packages, 4 services, 5 files), trimmed
+feature_field() {
+    sed 's/#.*//' "$FEATURES" | awk -F'|' -v id="$1" -v n="$2" '
+        { f = $1; gsub(/^[ \t]+|[ \t]+$/, "", f) } f == id { v = $n; gsub(/^[ \t]+|[ \t]+$/, "", v); print v; exit }'
+}
+excluded_ids() { [ -f "$EXCLUDED" ] && read_list "$EXCLUDED"; }
+is_excluded() { excluded_ids | grep -qx "$1"; }
+# What the excluded features take out, one per line: excluded_items 3 (packages), 4 (services), 5 (files)
+excluded_items() { local id; for id in $(excluded_ids); do feature_field "$id" "$2" | tr ' ' '\n'; done | sed '/^$/d'; }
+# A package list without the packages of the excluded features
+read_packages() { read_list "$1" | grep -vxF -f <(excluded_items - 3; echo "//none//"); }
+
 # The command as it will run (shortened if very long, e.g. a package list)
 # (arguments with spaces or symbols in single quotes, as you would type them)
 show_cmd() {
@@ -118,7 +134,7 @@ size_row() { printf '  %10s  %-34s %s\n' "$1" "$2" "$3"; }
 list_repo_sizes() {   # packages.txt with each one's size, largest first, and the totals
     local list n b new_pkgs=() total=0 installed_bytes=0 missing_bytes=0 n_installed=0 n_missing=0
     declare -A size is_installed
-    mapfile -t list < <(read_list "$DOT/packages.txt")
+    mapfile -t list < <(read_packages "$DOT/packages.txt")
     while IFS=$'\t' read -r n b; do size[$n]=$b; done < <(LC_ALL=C pacman -Si "${list[@]}" 2>/dev/null | parse_sizes)
     while read -r n; do is_installed[$n]=1; done < <(pacman -Qq "${list[@]}" 2>/dev/null)
 
@@ -158,7 +174,7 @@ list_repo_sizes() {   # packages.txt with each one's size, largest first, and th
 list_aur_sizes() {     # packages-aur.txt: the AUR does not publish sizes, only installed ones are known
     local list n b total=0 nq=0
     declare -A size
-    mapfile -t list < <(read_list "$DOT/packages-aur.txt")
+    mapfile -t list < <(read_packages "$DOT/packages-aur.txt")
     while IFS=$'\t' read -r n b; do size[$n]=$b; done < <(LC_ALL=C pacman -Qi "${list[@]}" 2>/dev/null | parse_sizes)
 
     printf '\n%s%s%s %s(%s)%s\n' "$B" "$(t "AUR packages")" "$N" "$G" "$(t "packages-aur.txt; the AUR does not publish sizes: installed ones only")" "$N"

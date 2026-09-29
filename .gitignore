@@ -30,3 +30,4 @@ home/.config/hypr/hypridle.conf
 # Python bytecode
 __pycache__/
 *.pyc
+excluded-features.txt

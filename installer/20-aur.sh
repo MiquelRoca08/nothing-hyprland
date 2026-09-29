@@ -13,7 +13,7 @@ module() {
     local aur
     command -v yay >/dev/null ||
         step "$(t "Install yay (AUR helper) from aur.archlinux.org/yay-bin")" install_yay
-    mapfile -t aur < <(read_list "$DOT/packages-aur.txt")
+    mapfile -t aur < <(read_packages "$DOT/packages-aur.txt")
     list_aur_sizes      # list with each one's size (installed ones only)
     step "$(t "Install the %s packages of packages-aur.txt" "${#aur[@]}")" yay -S --needed "${aur[@]}"
 }

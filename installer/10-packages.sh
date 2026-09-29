@@ -7,7 +7,7 @@ module() {
     info "$(t "Checking packages.txt…")"
     while read -r p; do
         if pacman -Si "$p" >/dev/null 2>&1; then repos+=("$p"); else missing+=("$p"); fi
-    done < <(read_list "$DOT/packages.txt")
+    done < <(read_packages "$DOT/packages.txt")
     ((${#missing[@]})) && warn "$(t "Not in the repositories (skipped): %s" "${missing[*]}")"
     list_repo_sizes     # list with each one's size and the total
     step "$(t "Install the %s packages of packages.txt and update the system" "${#repos[@]}")" \

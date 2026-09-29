@@ -57,8 +57,9 @@ checkout (e.g. `~/dotfiles`; find it with `readlink -f ~/.config/hypr`, which po
   and `/boot/limine.conf` once it has snapshots (limine-snapper-sync rewrites it; edit
   `/boot/limine.conf` and also the template `system/boot/limine.conf`).
 - **Packages:** `packages.txt` (repos) or `packages-aur.txt` (AUR), with a comment saying what it is
-  for. A service that must be enabled goes in `installer/30-services.sh`. `install.sh` runs the
-  modules in `installer/NN-name.sh` (`packages`, `aur`, `services`, `links`, `appearance`,
+  for. A service that must be enabled goes in `installer/30-services.sh`. Something the desktop
+  does not need goes in `features.txt` too (packages, services, system files), so users can leave it out. `install.sh` runs the
+  modules in `installer/NN-name.sh` (`features`, `packages`, `aur`, `services`, `links`, `appearance`,
   `system`, `boot`, `login`) and asks before every action: it is for the user to run
   (`./install.sh [module…] [--lang en|es]`).
 - **Own scripts:** `home/.local/bin/` (user) or `system/usr/local/bin/` (`arch-update`); shell data

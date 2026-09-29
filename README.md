@@ -77,6 +77,7 @@ at the end. Every module only does what is missing, so it is safe to run again a
 
 | Module | What it does |
 |---|---|
+| `features` | Lists the [optional features](features.txt) (Bluetooth, printers, Howdy, ASUS tools, DDC/CI, Flatpak, WebApps, Spotify, OCR, recording, firmware) and lets you leave some out: not installed (removed if they are, except packages other programs need), services not enabled, system files not copied. Saved in `excluded-features.txt` (not in git); the other modules follow it |
 | `packages` | `pacman -Syu --needed` with [`packages.txt`](packages.txt) (also updates the system); lists every package with its size and the total first |
 | `aur` | `yay -S --needed` with [`packages-aur.txt`](packages-aur.txt); builds yay first if missing |
 | `services` | Enables NetworkManager, bluetooth, power-profiles-daemon, cups and avahi; adds you to the `i2c` group |
@@ -154,6 +155,7 @@ always were and the change is already in the repo.
 | `system/` | **Copies/templates** of system files: greetd, PAM, Howdy, Limine, mkinitcpio, UKI splash, G14 audio patch, `arch-update`, pacman hook, ALSA state |
 | `installer/`, `install.sh` | The installer |
 | `packages.txt`, `packages-aur.txt`, `links.txt` | Packages (repos and AUR, each with a comment) and the paths to link |
+| `features.txt` | Optional features (packages, services, system files) the `features` module lets you leave out |
 | `scripts/` | Boot logo generator (`boot-logo.py`) and btrfs snapshot migration (`snapshots-setup.sh`) |
 | `private/` | Your own files, not in git (below) |
 | `docs/` | Documentation (below) |

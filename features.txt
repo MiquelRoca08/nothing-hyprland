@@ -1,0 +1,17 @@
+# Optional features: none of them is needed for the desktop to work. «./install.sh features» lets
+# you leave some out: their packages are not installed (and are removed if they are), their
+# services are not enabled and their files of system/ are not copied. Your choice is saved in
+# excluded-features.txt (not in git).
+#
+# id | name | packages (repos and AUR; only the installed ones are removed) | services | files of system/
+bluetooth | Bluetooth                                         | bluez bluez-utils elephant-bluetooth-bin | bluetooth.service |
+printing  | Printers (CUPS) and network discovery (Avahi)     | cups cups-filters ghostscript avahi nss-mdns | cups.socket cups.service avahi-daemon.socket avahi-daemon.service |
+howdy     | Face unlock (Howdy)                               | howdy-git howdy | | /etc/howdy/config.ini
+asus      | ASUS ROG tools (asusctl, ROG Control Center)      | asusctl rog-control-center | |
+ddc       | Brightness of external monitors (DDC/CI, ddcutil) | ddcutil | | /etc/modules-load.d/i2c-dev.conf
+flatpak   | Flatpak (and the Flatpak apps)                    | flatpak | |
+webapps   | WebApps (chromium)                                | chromium | |
+spotify   | Spotify (spotify-launcher)                        | spotify-launcher | |
+ocr       | Text from screenshots (OCR, tesseract)            | tesseract tesseract-data-eng | |
+recording | Screen recording (gpu-screen-recorder)            | gpu-screen-recorder | |
+firmware  | Firmware updates (fwupd)                          | fwupd | |

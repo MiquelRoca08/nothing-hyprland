@@ -78,6 +78,7 @@ un resumen. Cada módulo solo hace lo que falta, así que se puede repetir tras 
 
 | Módulo | Qué hace |
 |---|---|
+| `features` | Lista las [funciones opcionales](features.txt) (Bluetooth, impresoras, Howdy, herramientas de ASUS, DDC/CI, Flatpak, WebApps, Spotify, OCR, grabación, firmware) y te deja quitar las que no quieras: no se instalan (se desinstalan si ya lo están, salvo paquetes que necesiten otros programas), sus servicios no se activan y sus archivos de sistema no se copian. Se guarda en `excluded-features.txt` (fuera de git); los demás módulos lo respetan |
 | `packages` | `pacman -Syu --needed` con [`packages.txt`](packages.txt) (de paso actualiza el sistema); antes lista cada paquete con lo que ocupa y el total |
 | `aur` | `yay -S --needed` con [`packages-aur.txt`](packages-aur.txt); si no hay yay, lo compila antes |
 | `services` | Activa NetworkManager, bluetooth, power-profiles-daemon, cups y avahi; te añade al grupo `i2c` |
@@ -156,6 +157,7 @@ su sitio de siempre y el cambio ya está en el repo.
 | `system/` | **Copias y plantillas** de archivos del sistema: greetd, PAM, Howdy, Limine, mkinitcpio, splash de la UKI, parche de audio del G14, `arch-update`, hook de pacman y estado de ALSA |
 | `installer/`, `install.sh` | El instalador |
 | `packages.txt`, `packages-aur.txt`, `links.txt` | Paquetes (repositorios y AUR, cada uno con su comentario) y las rutas que se enlazan |
+| `features.txt` | Funciones opcionales (paquetes, servicios, archivos de sistema) que el módulo `features` te deja quitar |
 | `scripts/` | Generador del logo de arranque (`boot-logo.py`) y migración de btrfs a snapshots (`snapshots-setup.sh`) |
 | `private/` | Tus archivos, fuera de git (abajo) |
 | `docs/` | Documentación (abajo) |

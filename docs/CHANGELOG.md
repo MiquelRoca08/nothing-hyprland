@@ -85,6 +85,14 @@ comes back or a decision needs its background. Dates are from September 2026.
   `/etc/locale.conf` (`scripts/locale.sh`, with `localectl`), and the shell and the scripts read it
   from that file, so they change at once. The Settings window title is now «Settings» (was
   «Ajustes», matched by `conf/rules.lua`).
+- **Optional features in the installer.** New first module, `features`: `features.txt` groups
+  what the desktop does not need (Bluetooth, printers + Avahi, Howdy, ASUS tools, DDC/CI, Flatpak,
+  WebApps, Spotify, OCR, recording, fwupd) with its packages, services and `system/` files. The
+  ones you leave out go to `excluded-features.txt` (not in git): `packages`/`aur` skip their
+  packages, `services` their services (and the i2c group for DDC/CI), `system` their files; if
+  installed, their services are disabled and their packages removed with `pacman -Rns`, keeping
+  any that a package outside the feature still requires. Howdy's PAM lines use `-auth`, so
+  removing it does not break `sudo` or the lock screen.
 - **Flatpak in `arch-update`.** The bar and Settings counted Flatpak updates, but `arch-update`
   (what the menu and Settings → Updates run) only did pacman and the AUR, so they were never
   applied and the count stayed. New step 7: `flatpak update` of the system installation (as root:

@@ -44,6 +44,7 @@ module() {
     local f dst pending=() old=()
     while read -r f; do
         dst="/${f#./}"
+        excluded_items - 5 | grep -qx "$dst" && continue     # its feature was left out (features module)
         case $dst in
         /boot/limine.conf)
             if grep -q 'limine-snapper-sync' "$dst" 2>/dev/null; then
