@@ -1,0 +1,22 @@
+# mkinitcpio preset file for the 'linux' package
+
+#ALL_config="/etc/mkinitcpio.conf"
+ALL_kver="/boot/vmlinuz-linux"
+#ALL_kerneldest="/boot/vmlinuz-linux"
+
+PRESETS=('default')
+#PRESETS=('default' 'fallback')
+
+#default_config="/etc/mkinitcpio.conf"
+#default_image="/boot/initramfs-linux.img"
+default_uki="/boot/EFI/Linux/arch-linux.efi"
+# --no-cmdline: the command line always comes from limine.conf. With Secure Boot, a
+# UKI with an embedded cmdline ignores Limine's and the snapshots would boot the normal system.
+# --splash: the logo systemd-stub shows as soon as the UKI starts (scripts/logo-arranque.py);
+# it stays until amdgpu changes the display mode (Plymouth is disabled: docs/SYSTEM.md).
+default_options="--splash /usr/local/share/nothing/splash.bmp --no-cmdline"
+
+#fallback_config="/etc/mkinitcpio.conf"
+##fallback_image="/boot/initramfs-linux-fallback.img"
+fallback_uki="/boot/EFI/Linux/arch-linux-fallback.efi"
+#fallback_options="-S autodetect"

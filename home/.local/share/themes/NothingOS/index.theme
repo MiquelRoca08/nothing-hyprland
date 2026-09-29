@@ -1,0 +1,9 @@
+# GTK theme «NothingOS»: it is adw-gtk3-dark (package adw-gtk-theme) under another name. Its gtk.css
+# load the package's, so it updates with it; the monochrome palette comes from
+# ~/.config/gtk-3.0/gtk.css and gtk-4.0/gtk.css. Enabled with gsettings (gtk-theme).
+[X-GNOME-Metatheme]
+Name=NothingOS
+Type=X-GNOME-Metatheme
+Comment=Monocromo estilo Nothing OS (sobre adw-gtk3-dark)
+Encoding=UTF-8
+GtkTheme=NothingOS

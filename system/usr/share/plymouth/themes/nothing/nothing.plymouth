@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Nothing
+Description=NOTHING OS LINUX dot logo on black (the same as the UKI splash)
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/nothing
+ScriptFile=/usr/share/plymouth/themes/nothing/nothing.script

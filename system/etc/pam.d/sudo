@@ -1,0 +1,9 @@
+#%PAM-1.0
+# (dotfiles) Face with Howdy before the password: if recognized, you are in; if not (or with the lid
+# closed, over SSH or without a camera), the usual password follows. The dash: if
+# pam_howdy.so is missing (Howdy uninstalled), the line is ignored instead of failing.
+-auth		sufficient	pam_howdy.so
+auth		include		system-auth
+account		include		system-auth
+session		include		system-auth
+session		optional	pam_systemd.so class=none

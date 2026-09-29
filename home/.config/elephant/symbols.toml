@@ -1,0 +1,3 @@
+# Copies the symbol and pastes it into the active window (SHIFT+Insert). In Hyprland 0.56 the
+# classic «hyprctl dispatch sendshortcut …» syntax does not work: the Lua dispatcher is needed.
+command = '''wl-copy && hyprctl dispatch 'hl.dsp.send_shortcut({ mods = "SHIFT", key = "Insert", window = "activewindow" })' '''

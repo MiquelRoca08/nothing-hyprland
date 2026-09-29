@@ -1,0 +1,286 @@
+#!/usr/bin/env bash
+# System menu with walker (≈ Omarchy 3.8.4's omarchy-menu).
+#   menu                     main menu: searches apps and every entry (without typing,
+#                            the sections). If a menu is already open, it closes it.
+#   menu <path>              goes straight to a submenu (Escape closes): Actions, Actions/Screenshot,
+#                            System… (screenshot, record and the old Spanish names work too)
+#   menu hacer <id>          runs an entry (used by the elephant menus)
+#   menu --entradas          prints the entry table in the interface language (read by the elephant menus)
+#   menu --entradas-todas    the table in English, without removing hidden entries (read by Settings → Menu)
+#   menu --desde-principal <path>   submenu opened from the main one: Escape goes back to it
+#
+# The entries come from one table (ENTRADAS): the submenus and the main menu's search
+# (~/.config/elephant/menus/sistema*.lua) use the same one. Its paths and texts are in English and
+# are also the identifiers of hidden entries and of the order in settings.json; they are shown in the
+# interface language (t, ~/.config/quickshell/i18n/i18n.sh).
+
+source "$HOME/.config/quickshell/i18n/i18n.sh" 2>/dev/null ||
+    t() { local s=$1; shift; if (($#)); then printf -- "$s" "$@"; else printf '%s' "$s"; fi; }
+
+# path|icon|text|target — a «>Path» target opens that submenu; otherwise it is an id for «hacer»
+ENTRADAS=$(cat <<'FIN'
+|󰀻|Apps|apps
+|󰧑|Learn|>Learn
+|󱓞|Actions|>Actions
+|󰉦|Style|>Style
+|󰒓|Settings|ajustes
+|󰉉|Install|>Install
+|󰭌|Remove|>Remove
+|󰚰|Update|>Update
+|󰋽|About|acerca
+|󰌢|System|>System
+Learn|󰌌|Keybinds|atajos
+Learn|󰈙|Hyprland|wiki-hyprland
+Learn|󰣇|Arch Wiki|wiki-arch
+Learn|󰈙|Quickshell|wiki-quickshell
+Actions|󰄀|Screenshot|>Actions/Screenshot
+Actions|󰕧|Record|>Actions/Record
+Actions|󰂛|Do Not Disturb|molestar
+Actions|󱫖|Idle lock|inactividad
+Actions|󰍹|Laptop screen|portatil
+Actions/Screenshot|󰍹|Screen|captura-pantalla
+Actions/Screenshot|󰩭|Region|captura-zona
+Actions/Screenshot|󰖯|Window|captura-ventana
+Actions/Screenshot|󰴑|Text (OCR)|captura-texto
+Actions/Screenshot|󰃉|Color|color
+Actions/Record|󰝟|No audio|grabar
+Actions/Record|󰕾|With system audio|grabar-audio
+Actions/Record|󰍬|With audio and mic|grabar-micro
+Style|󰸉|Wallpaper|fondo
+Style|󰏘|Appearance|apariencia
+Install|󰣇|Package|instalar-paquete
+Install|󰏖|AUR|instalar-aur
+Install|󰏓|Flatpak|instalar-flatpak
+Install|󰖟|WebApp|instalar-webapp
+Install|󰆍|TUI|instalar-tui
+Remove|󰣇|Package|quitar-paquete
+Remove|󰏓|Flatpak|quitar-flatpak
+Remove|󰖟|WebApp|quitar-webapp
+Remove|󰆍|TUI|quitar-tui
+Update|󰚰|System (with AUR)|actualizar
+Update|󰣇|Repos only|actualizar-repos
+Update|󰍛|Firmware|firmware
+Update|󰑓|Restart walker|reiniciar-walker
+Update|󰑓|Restart shell|reiniciar-shell
+System|󰌾|Lock|bloquear
+System|󰒲|Suspend|suspender
+System|󰍃|Log out|cerrar-sesion
+System|󰜉|Reboot|reiniciar
+System|󰐥|Power off|apagar
+FIN
+)
+
+# Customization (Settings → Personalization → QuickShell → Menu, in settings.json): hidden entries
+# and sections («Section» or «Section/Entry»; hiding a section hides everything inside it,
+# search included), the order of the main menu sections and custom entries
+# ({ ruta, icono, texto, comando }, run by «hacer propia:N»)
+AJUSTES="$HOME/.config/quickshell/settings.json"
+TODAS=$ENTRADAS
+if command -v jq >/dev/null && [[ -f $AJUSTES ]]; then
+    propias=$(jq -r '(.menuCustom // []) | to_entries[] | select(.value.texto != null and .value.texto != "")
+        | "\(.value.ruta // "")|\(.value.icono // "󰘳")|\(.value.texto | gsub("[|]"; "/"))|propia:\(.key)"' "$AJUSTES" 2>/dev/null)
+    [[ -n $propias ]] && TODAS+=$'\n'"$propias"
+    ocultas=$(jq -r '(.menuHidden // [])[]' "$AJUSTES" 2>/dev/null)
+    orden=$(jq -r '(.menuOrder // [])[]' "$AJUSTES" 2>/dev/null)
+    ENTRADAS=$(awk -F'|' -v oc="$ocultas" -v ord="$orden" '
+        BEGIN { n = split(oc, o, "\n"); for (i = 1; i <= n; i++) if (o[i] != "") h[o[i]] = 1
+                m = split(ord, r, "\n"); for (i = 1; i <= m; i++) if (r[i] != "") pos[r[i]] = i }
+        # Hidden itself, or some section of its path
+        function oculta(ruta, texto,   p) {
+            if ((ruta == "" ? texto : ruta "/" texto) in h) return 1
+            for (p = ruta; p != ""; ) { if (p in h) return 1; if (index(p, "/")) sub(/\/[^\/]*$/, "", p); else p = "" }
+            return 0 }
+        !oculta($1, $3) { if ($1 == "") { top[++t] = $0; tk[t] = ($3 in pos) ? pos[$3] : 1000 + t } else resto[++q] = $0 }
+        END {   # sections in the chosen order; those not in it go after, in their own order
+            for (i = 1; i <= t; i++) idx[i] = i
+            for (i = 2; i <= t; i++) for (j = i; j > 1 && tk[idx[j - 1]] > tk[idx[j]]; j--) { x = idx[j]; idx[j] = idx[j - 1]; idx[j - 1] = x }
+            for (i = 1; i <= t; i++) print top[idx[i]]
+            for (i = 1; i <= q; i++) print resto[i] }' <<<"$TODAS")
+fi
+
+# Column 5: the text in the interface language (what walker shows and returns)
+ENTRADAS=$(while IFS='|' read -r r i x d; do printf '%s|%s|%s|%s|%s\n' "$r" "$i" "$x" "$d" "$(t "$x")"; done <<<"$ENTRADAS")
+
+# A path in the interface language (Actions/Screenshot → Acciones/Captura)
+ruta_vista() {
+    local IFS=/ p out=()
+    for p in $1; do out+=("$(t "$p")"); done
+    echo "${out[*]}"
+}
+
+VOLVER_SALE=false # true when entering a submenu directly (from a bind)
+
+# Signal for the open menu to end completely (SUPER+SPACE with the menu open)
+CERRAR="${XDG_RUNTIME_DIR:-/tmp}/menu-cerrar"
+
+# Menu width from the longest text (minimum 295 px): ~10 px per character plus margins
+ancho() { local n; n=$(echo -e "$1" | wc -L); echo $((n * 10 + 100 > 295 ? n * 10 + 100 : 295)); }
+
+# menu <prompt> <options separated by \n>. No search field: while it is open, Hyprland's «menu»
+# submap is on, where Backspace closes the menu (menu-atras) and goes back like Escape.
+# It is cleared at the end, so whatever opens next gets a normal Backspace.
+menu() {
+    hyprctl dispatch 'hl.dsp.submap("menu")' >/dev/null
+    echo -e "$2" | walker-launch --dmenu --nosearch --width "$(ancho "$2\n$1…")" \
+        --minheight 1 --maxheight 630 -p "$1…" 2>/dev/null
+    hyprctl dispatch 'hl.dsp.submap("reset")' >/dev/null
+    # menu() runs inside $(…): «exit» would only leave the subshell, so the whole script
+    # is ended ($$ is still the script's PID)
+    if [[ -e $CERRAR ]]; then rm -f "$CERRAR"; kill $$; fi
+}
+
+# Runs a command in a floating terminal and waits for a key when it ends
+terminal() {
+    # 130 = cancelled (Escape in fzf, Ctrl+C): close without waiting
+    # Extra keystrokes are discarded before waiting, so they do not close it
+    setsid alacritty --class menu-terminal --title "$1" -e bash -c \
+        "$2; e=\$?; ((e == 130)) && exit; echo; while read -t 0.05 -n 1 -s; do :; done; read -n 1 -s -r -p '$(t "Done. Press a key to close…")'" >/dev/null 2>&1 &
+}
+
+# ~/.config/quickshell/scripts/actualizar.sh: arch-update --menu, which waits for its «Cerrar» button
+actualizar() {
+    setsid alacritty --class menu-terminal --title "$(t Update)" \
+        -e "$HOME/.config/quickshell/scripts/actualizar.sh" "$@" >/dev/null 2>&1 &
+}
+
+avisar() { notify-send -u low "$@"; }
+
+# Main menu: walker with the «menu» provider set (config.toml): without typing it shows
+# the sections (menus:sistema); typing searches every entry (menus:sistemabuscar) and
+# the apps. If it is already open, walker closes it (close_when_open).
+principal() {
+    # 44 px per section (that is the row height: .item-box in walker/themes/nothing/style.css) plus 6
+    # of slack, so the last one is not clipped at fractional scale (1.8): just tall enough to show
+    # them all without scrolling
+    local n alto
+    n=$(awk -F'|' '$1 == ""' <<<"$ENTRADAS" | wc -l)
+    alto=$((n * 44 < 176 ? 182 : n * 44 + 6))
+    exec walker-launch -s menu -p "$(t "Search apps and options…")" --minheight "$alto" --maxheight "$alto"
+}
+
+# Entries of a path, as «icon  text» (one per line)
+opciones() { awk -F'|' -v r="$1" '$1 == r { printf "%s  %s\n", $2, $5 }' <<<"$ENTRADAS"; }
+
+# Target of the entry shown as <text> in path <path>
+destino() { awk -F'|' -v r="$1" -v t="$2" '$1 == r && $5 == t { print $4; exit }' <<<"$ENTRADAS"; }
+
+# Escape (or Backspace) in a submenu: to its parent; from a top-level one, to the main menu
+volver() {
+    [[ $VOLVER_SALE == true ]] && exit 0
+    if [[ $1 == */* ]]; then mostrar "${1%/*}"; else principal; fi
+}
+
+mostrar() {
+    local ruta=$1 elegida texto d
+    # If already recording, the «Record» entry stops it
+    if [[ $ruta == Actions/Record ]] && grabar --parar; then exit 0; fi
+    elegida=$(menu "$(t "${ruta##*/}")" "$(opciones "$ruta")")
+    [[ -n $elegida ]] || { volver "$ruta"; return; }
+    texto=${elegida#*  }
+    d=$(destino "$ruta" "$texto")
+    if [[ $d == \>* ]]; then mostrar "${d#>}"; else hacer "$d"; fi
+}
+
+hacer() {
+    case $1 in
+    apps) exec walker-launch -p "$(t "Open…")" ;;
+    ajustes) qs ipc call settings open "" ;;
+    acerca) terminal "$(t About)" "fastfetch" ;;
+    atajos) menu-atajos ;;
+    propia:*)
+        local cmd
+        cmd=$(jq -r ".menuCustom[${1#propia:}].comando // empty" "$AJUSTES" 2>/dev/null)
+        [[ -n $cmd ]] && setsid -f sh -c "$cmd" >/dev/null 2>&1 ;;
+    wiki-hyprland) xdg-open https://wiki.hypr.land/ ;;
+    wiki-arch) xdg-open https://wiki.archlinux.org/ ;;
+    wiki-quickshell) xdg-open https://quickshell.org/docs/ ;;
+    molestar)
+        if [[ $(qs ipc call notifications dnd) == true ]]; then avisar "$(t "Do Not Disturb on")"; else avisar "$(t "Do Not Disturb off")"; fi ;;
+    inactividad)
+        if pkill -x hypridle; then
+            avisar "$(t "Idle lock off")" "$(t "The screen will not lock or turn off by itself")"
+        else
+            setsid hypridle >/dev/null 2>&1 &
+            avisar "$(t "Idle lock on")"
+        fi ;;
+    portatil) hyprctl dispatch 'hl.dsp.dpms({ action = "toggle", monitor = "eDP-1" })' >/dev/null ;;
+    captura-pantalla) captura pantalla ;;
+    captura-zona) captura zona ;;
+    captura-ventana) captura ventana ;;
+    captura-texto) captura texto ;;
+    color) pkill hyprpicker || hyprpicker -a ;;
+    grabar) grabar --parar || grabar ;;
+    grabar-audio) grabar --parar || grabar --audio ;;
+    grabar-micro) grabar --parar || grabar --audio --micro ;;
+    fondo) walker-launch -m menus:fondos -p "$(t "Wallpaper…")" ;;
+    apariencia) qs ipc call settings open themes ;;
+    instalar-paquete) terminal "$(t "Install packages")" "paquetes repos" ;;
+    instalar-aur) terminal "$(t "Install from the AUR")" "paquetes aur" ;;
+    instalar-flatpak) terminal "$(t "Install Flatpak")" "paquetes flatpak" ;;
+    instalar-webapp) webapp crear ;;
+    instalar-tui) tui crear ;;
+    quitar-paquete) terminal "$(t "Remove packages")" "paquetes quitar" ;;
+    quitar-flatpak) terminal "$(t "Remove Flatpak")" "paquetes quitar-flatpak" ;;
+    quitar-webapp) webapp quitar ;;
+    quitar-tui) tui quitar ;;
+    actualizar) actualizar ;;
+    actualizar-repos) actualizar --no-aur ;;
+    firmware) terminal "Firmware" "fwupdmgr refresh && fwupdmgr update" ;;
+    reiniciar-walker) walker-restart && avisar "$(t "Walker restarted")" ;;
+    reiniciar-shell) pkill -x qs; hyprctl dispatch 'hl.dsp.exec_cmd("qs")' >/dev/null ;;
+    bloquear) bloquear ;;
+    suspender) systemctl suspend ;;
+    cerrar-sesion) hyprctl dispatch 'hl.dsp.exit()' ;;
+    reiniciar) systemctl reboot ;;
+    apagar) systemctl poweroff ;;
+    *) echo "menu: unknown option: $1" >&2; exit 1 ;;
+    esac
+}
+
+# Short name or path → table path (screenshot → Actions/Screenshot). The old Spanish names too
+ruta_de() {
+    case ${1,,} in
+    screenshot | captura | acciones/captura) echo Actions/Screenshot ;;
+    record | grabar | acciones/grabar) echo Actions/Record ;;
+    acciones) echo Actions ;;
+    aprender) echo Learn ;;
+    estilo) echo Style ;;
+    instalar) echo Install ;;
+    quitar) echo Remove ;;
+    actualizar) echo Update ;;
+    sistema) echo System ;;
+    *) awk -F'|' -v r="${1,,}" 'tolower($1) == r { print $1; exit }' <<<"$ENTRADAS" ;;
+    esac
+}
+
+case ${1:-} in
+--entradas)
+    while IFS='|' read -r r i x d v; do printf '%s|%s|%s|%s\n' "$(ruta_vista "$r")" "$i" "$v" "$d"; done <<<"$ENTRADAS"
+    exit 0 ;;
+--entradas-todas) echo "$TODAS"; exit 0 ;;
+hacer) hacer "$2"; exit ;;
+esac
+
+# The same bind closes the menu if it is open (completely, without going back)
+if pgrep -f "walker.*--dmenu" >/dev/null; then
+    touch "$CERRAR"
+    walker --close >/dev/null 2>&1
+    exit 0
+fi
+rm -f "$CERRAR"
+
+# In case the script ends unexpectedly with the submap on
+trap 'hyprctl dispatch '"'"'hl.dsp.submap("reset")'"'"' >/dev/null' EXIT
+
+case ${1:-} in
+"") principal ;;
+--desde-principal)
+    # walker has just closed: without this pause, it sometimes does not show the next menu
+    sleep 0.3
+    mostrar "$2" ;;
+*)
+    VOLVER_SALE=true
+    r=$(ruta_de "$1")
+    [[ -n $r ]] || { echo "menu: unknown submenu: $1" >&2; exit 1; }
+    mostrar "$r" ;;
+esac

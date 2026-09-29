@@ -1,0 +1,7 @@
+# PAM for the shell's lock screen (quickshell/LockScreen.qml, PamContext).
+# Same as hyprlock's: the 'login' stack (password, faillock), and the GNOME
+# keyring is unlocked with the password.
+
+auth        include     login
+
+-auth       optional    pam_gnome_keyring.so

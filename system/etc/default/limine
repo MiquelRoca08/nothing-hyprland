@@ -1,0 +1,11 @@
+# limine-snapper-sync: puts snapper's snapshots in Limine's menu.
+# Full reference: /usr/share/doc/limine-snapper-sync/ (or the project's README).
+TARGET_OS_NAME="Arch Linux"
+ESP_PATH="/boot"
+SNAPPER_CONFIG_NAME="root"
+ROOT_SUBVOLUME_PATH="/@"
+ROOT_SNAPSHOTS_PATH="/@/.snapshots"
+# /boot has 1 GiB and the UKI weighs ~170 MiB: old entries are removed above 85 %
+LIMIT_USAGE_PERCENT=85
+MAX_SNAPSHOT_ENTRIES=auto
+EXCLUDE_SNAPSHOT_ENTRIES="Windows*, Rescate*"

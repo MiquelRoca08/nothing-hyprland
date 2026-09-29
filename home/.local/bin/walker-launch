@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Opens walker (≈ omarchy-launch-walker). Starts elephant and the walker service first if they
+# are not running; arguments are passed as is (e.g. «walker-launch -m clipboard»).
+for s in elephant walker; do
+    systemctl --user is-active -q "$s.service" || systemctl --user start "$s.service"
+done
+# The search placeholder in the interface language, unless the caller gives its own
+for a in "$@"; do [[ $a == -p || $a == --placeholder ]] && exec walker --width 644 --maxheight 300 --minheight 300 "$@"; done
+source "$HOME/.config/quickshell/i18n/i18n.sh" 2>/dev/null || t() { printf '%s' "$1"; }
+exec walker --width 644 --maxheight 300 --minheight 300 -p "$(t "Search…")" "$@"

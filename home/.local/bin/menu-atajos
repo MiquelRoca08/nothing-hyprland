@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# Hyprland keybind list in walker (≈ omarchy-menu-keybindings). It comes from «hyprctl binds -j»:
+# since the config is Lua, each bind is shown by its «description» (conf/keybinds.lua), not by its
+# command. With --print it writes it to the terminal.
+
+source "$HOME/.config/quickshell/i18n/i18n.sh" 2>/dev/null ||
+    t() { local s=$1; shift; if (($#)); then printf -- "$s" "$@"; else printf '%s' "$s"; fi; }
+
+# A description in the interface language; with a trailing number (loops: «Go to workspace 3»),
+# the rest is translated
+desc() {
+    local s; s=$(t "$1")
+    [[ $s == "$1" && $1 =~ ^(.*)\ ([^ ]*[0-9][^ ]*)$ ]] && s="$(t "${BASH_REMATCH[1]}") ${BASH_REMATCH[2]}"
+    printf '%s' "$s"
+}
+
+lista() {
+    hyprctl binds -j | jq -r '
+      def mods:
+        [ (if (.modmask / 64 | floor) % 2 == 1 then "SUPER" else empty end),
+          (if (.modmask / 4  | floor) % 2 == 1 then "CTRL"  else empty end),
+          (if (.modmask / 8  | floor) % 2 == 1 then "ALT"   else empty end),
+          (if  .modmask % 2 == 1               then "SHIFT" else empty end) ];
+      def tecla:
+        { "mouse:272": "Left click", "mouse:273": "Right click",
+          "mouse_down": "Wheel ↓", "mouse_up": "Wheel ↑",
+          "left": "←", "right": "→", "up": "↑", "down": "↓",
+          "Return": "Enter", "SPACE": "Space", "Print": "PrtSc", "Escape": "Esc",
+          "XF86AudioRaiseVolume": "Vol +", "XF86AudioLowerVolume": "Vol −",
+          "XF86AudioMute": "Mute", "XF86AudioMicMute": "Mic",
+          "XF86MonBrightnessUp": "Brightness +", "XF86MonBrightnessDown": "Brightness −",
+          "XF86AudioNext": "⏭", "XF86AudioPrev": "⏮",
+          "XF86AudioPlay": "⏯", "XF86AudioPause": "⏸" }[.key] // .key;
+      .[] | select(.description != "" and .submap != "captura") | [(mods | join(" + ")), tecla, .description] | join("\u001f")' |
+        awk '!visto[$0]++' |
+        while IFS=$'\037' read -r m k d; do
+            printf '%-26s %s\n' "${m:+$m + }$(t "$k")" "$(desc "$d")"
+        done
+}
+
+if [[ $1 == --print || $1 == -p ]]; then
+    lista
+    exit
+fi
+
+alto=$(hyprctl monitors -j | jq -r '.[] | select(.focused) | (.height / .scale * 0.5 | floor)')
+lista | walker-launch --dmenu -p "$(t "Keybinds…")" --width 700 --minheight 300 --maxheight "$alto" >/dev/null 2>&1

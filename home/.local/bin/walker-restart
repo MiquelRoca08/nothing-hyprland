@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Restarts elephant and walker (≈ omarchy-restart-walker). Used by walker's emergency entry
+# («Restart walker»), the menu and the pacman hook walker-restart.hook, which runs it as
+# root: then the services of this script's owner are restarted with systemd-run.
+reiniciar() {
+    systemctl --user restart elephant.service walker.service
+}
+
+if ((EUID == 0)); then
+    usuario=$(stat -c %U "$0")
+    uid=$(id -u "$usuario")
+    # Without a session there are no services to restart
+    [[ -d /run/user/$uid ]] || exit 0
+    systemd-run --quiet --wait --uid="$usuario" --setenv=XDG_RUNTIME_DIR="/run/user/$uid" \
+        bash -c "$(declare -f reiniciar); reiniciar"
+else
+    reiniciar
+fi

@@ -1,0 +1,14 @@
+# After upgrading walker or elephant, restarts their user services (otherwise the old
+# version keeps running). The path is the ~/.local/bin/walker-restart symlink (dotfiles);
+# install.sh fills in @HOME@ when copying it.
+[Trigger]
+Type = Package
+Operation = Upgrade
+Target = walker
+Target = walker-debug
+Target = elephant*
+
+[Action]
+Description = Reiniciando walker y elephant…
+When = PostTransaction
+Exec = @HOME@/.local/bin/walker-restart

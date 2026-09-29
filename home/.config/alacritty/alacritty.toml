@@ -1,0 +1,19 @@
+
+[[keyboard.bindings]]
+key = "Return"
+mods = "Shift"
+chars = "\u001B\r"
+
+# Colors: the desktop theme's (Settings → Personalization → Themes), which
+# quickshell/scripts/tema.sh writes to this imported file (reloaded when the theme changes).
+# The Nothing theme's colors are in quickshell/temas/nothing.json.
+[general]
+import = ["~/.local/share/quickshell/tema/alacritty.toml"]
+
+# --- Desktop theme ---
+[window]
+padding = { x = 12, y = 10 }
+
+[font]
+normal = { family = "JetBrainsMono Nerd Font" }
+size = 11

@@ -1,0 +1,16 @@
+[Unit]
+Description=Walker (servicio en segundo plano)
+After=graphical-session.target elephant.service
+Wants=elephant.service
+
+[Service]
+Type=simple
+# GTK's OpenGL renderer. With cairo (Omarchy's, because of NVIDIA issues) remains of the previous
+# frame stayed when results changed (e.g. the dots of another entry's «i»s)
+Environment=GSK_RENDERER=ngl
+ExecStart=walker --gapplication-service
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=graphical-session.target

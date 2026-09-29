@@ -1,0 +1,14 @@
+
+[Unit]
+Description=Elephant
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=elephant
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=graphical-session.target
+							

@@ -1,0 +1,5 @@
+# Only each app's name: no actions (new window, etc.), no searching the description
+# and no reordering by history
+show_actions = false
+only_search_title = true
+history = false

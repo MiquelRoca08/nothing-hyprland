@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Backspace in the system menus (the «menu» submap in conf/keybinds.lua): closes the open
+# menu, and «menu» goes back to the previous one just like Escape. If no menu is open
+# (the submap was left on by mistake), it clears it so Backspace works again.
+if pgrep -f "walker.*--dmenu" >/dev/null; then
+    walker --close >/dev/null 2>&1
+else
+    hyprctl dispatch 'hl.dsp.submap("reset")' >/dev/null
+fi

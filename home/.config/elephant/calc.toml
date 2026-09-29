@@ -1,0 +1,2 @@
+# Instant result, without waiting for typing to finish
+async = false

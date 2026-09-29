@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+# Install and remove packages with fzf in the terminal (≈ Omarchy 3.8.4's omarchy-pkg-install,
+# omarchy-pkg-aur-install and omarchy-pkg-remove), plus Flatpak (Flathub). The system menu opens it
+# in a floating terminal.
+#   paquetes repos | aur | flatpak         instalar
+#   paquetes quitar | quitar-flatpak       quitar
+# Tab marks several; below, the package description (alt-p hides it, alt-j/k scrolls it).
+source "$HOME/.config/quickshell/i18n/i18n.sh" 2>/dev/null ||
+    t() { local s=$1; shift; if (($#)); then printf -- "$s" "$@"; else printf '%s' "$s"; fi; }
+
+# White and greys like the rest of the system; red only for removing
+COLORES='fg:#b0b0b0,fg+:#ffffff,bg+:#161616,hl:#ffffff,hl+:#ffffff,info:#6e6e6e,prompt:#ffffff,pointer:#ffffff,marker:#ffffff,spinner:#6e6e6e,header:#6e6e6e,border:#2e2e2e,label:#6e6e6e'
+COLORES_QUITAR="$COLORES,pointer:#d71921,marker:#d71921"
+
+# elegir <preview> <label> [colors] [more fzf options…] (list on stdin)
+elegir() {
+    local preview=$1 etiqueta=$2 colores=${3:-$COLORES}
+    shift 3
+    fzf --multi --reverse --prompt '  ' \
+        --preview "$preview" \
+        --preview-label "$etiqueta" --preview-label-pos bottom \
+        --preview-window 'down:65%:wrap' \
+        --bind 'alt-p:toggle-preview' \
+        --bind 'alt-d:preview-half-page-down,alt-u:preview-half-page-up' \
+        --bind 'alt-k:preview-up,alt-j:preview-down' \
+        --color "$colores" "$@"
+}
+
+# Asks for the password once and keeps it alive while running (≈ omarchy-sudo-keepalive)
+sudo_vivo() {
+    sudo -v || exit 1
+    while true; do sudo -n true; sleep 60; done 2>/dev/null &
+    trap "kill $! 2>/dev/null" EXIT
+}
+
+AYUDA="$(t "alt-p: description · alt-j/k: scroll · tab: select several")"
+
+case ${1:-} in
+repos)
+    elegidos=$(pacman -Slq | sort -u | elegir 'pacman -Sii {1}' "$AYUDA" "$COLORES" --header "$(t "Install (repos)")")
+    [[ -n $elegidos ]] || exit 130
+    sudo_vivo
+    echo "$elegidos" | xargs sudo pacman -S --needed --noconfirm
+    ;;
+aur)
+    elegidos=$(yay -Slqa | elegir 'yay -Siia {1}' "$AYUDA · alt-b/B: PKGBUILD / info" "$COLORES" \
+        --header "$(t "Install (AUR)")" \
+        --bind 'alt-b:change-preview:yay -Gpa {1} | tail -n +5' \
+        --bind 'alt-B:change-preview:yay -Siia {1}')
+    [[ -n $elegidos ]] || exit 130
+    sudo_vivo
+    echo "$elegidos" | sed 's|^|aur/|' | xargs yay -S --noconfirm
+    ;;
+flatpak)
+    echo "$(t "Loading the Flathub list…")"
+    elegidos=$(flatpak remote-ls flathub --app --columns=application,name |
+        elegir 'flatpak remote-info flathub {1}' "$AYUDA" "$COLORES" \
+            --header "$(t "Install (Flatpak)")" --delimiter '\t' --with-nth 2,1 --accept-nth 1)
+    [[ -n $elegidos ]] || exit 130
+    sudo_vivo
+    echo "$elegidos" | xargs sudo flatpak install -y --noninteractive flathub
+    ;;
+quitar)
+    # Only explicitly installed ones (not dependencies)
+    elegidos=$(yay -Qqe | elegir 'yay -Qi {1}' "$AYUDA" "$COLORES_QUITAR" --header "$(t "Remove packages")")
+    [[ -n $elegidos ]] || exit 130
+    sudo_vivo
+    echo "$elegidos" | xargs sudo pacman -Rns --noconfirm
+    ;;
+quitar-flatpak)
+    lista=$(flatpak list --app --columns=application,name)
+    [[ -n $lista ]] || { echo "$(t "No Flatpak app is installed.")"; exit 0; }
+    elegidos=$(echo "$lista" | elegir 'flatpak info {1}' "$AYUDA" "$COLORES_QUITAR" \
+        --header "$(t "Remove (Flatpak)")" --delimiter '\t' --with-nth 2,1 --accept-nth 1)
+    [[ -n $elegidos ]] || exit 130
+    sudo_vivo
+    echo "$elegidos" | xargs sudo flatpak uninstall -y --noninteractive
+    sudo flatpak uninstall -y --noninteractive --unused
+    ;;
+*)
+    echo "usage: paquetes repos|aur|flatpak|quitar|quitar-flatpak" >&2
+    exit 1
+    ;;
+esac

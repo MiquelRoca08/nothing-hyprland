@@ -1,0 +1,492 @@
+#!/usr/bin/env bash
+#
+# arch-update — Arch Linux updater: Snapper snapshot + pacman + AUR.
+#
+# It follows Omarchy 4.0's update process, without its own layer (migrations,
+# post-update hooks, /usr/share/omarchy). It is the only thing that creates snapshots
+# (no snap-pac or scheduled snapshots) and only one is kept: the one right before the
+# last update, to go back to it from Limine if something goes wrong
+# (NUMBER_LIMIT=1 in /etc/snapper/configs/root).
+#
+# Lives in ~/dotfiles/system/usr/local/bin/ → sudo install -Dm755 … /usr/local/bin/arch-update
+#
+# Usage (as root):
+#   sudo arch-update                -> asks, snapshot, repos + AUR, cleanup and checks
+#   sudo arch-update -y             -> without asking (orphans are not removed)
+#   sudo arch-update --no-aur       -> official repos only
+#   sudo arch-update --no-snapshot  -> no Snapper snapshot
+#   arch-update --dry-run           -> only shows what it would do, runs nothing
+#   sudo arch-update --menu         -> as the menu launches it: when done it does not close, it waits
+#                                      for the «Close» button (or «Reboot now» / «Later») and exits
+#                                      with 200 (so the launcher, actualizar.sh, knows it already
+#                                      waited; otherwise it waits itself)
+#
+# Questions are buttons: ←/→ (or Tab, h/l) to choose, Enter to accept, y/n as shortcuts and
+# Escape for the «no» option. Messages follow the session user's shell language
+# (~/.config/quickshell/i18n/i18n.sh; English if it is not found).
+#
+# The output goes to /var/log/arch-update.log (view it with `less -R`).
+#
+set -euo pipefail
+
+# ---------------------------------------------------------------------------
+# Configuration
+# ---------------------------------------------------------------------------
+LOCKFILE="/var/lock/arch-update.lock"
+LOGFILE="/var/log/arch-update.log"
+MIN_FREE_MB=10240     # minimum free space on / (MiB), like Omarchy
+SNAPPER_CONFIG="root" # snapper config
+KEEP_CACHE_VERSIONS=2 # versions of each package kept in the cache (paccache -rk)
+UKI="/boot/EFI/Linux/arch-linux.efi"
+
+ASSUME_YES=false
+DO_AUR=true
+DO_SNAPSHOT=true
+DRY_RUN=false
+MENU=false
+OFRECER_REINICIO=false
+CANCELADO=false
+NEEDS_REBOOT=false
+BOOT_OK=true
+
+TOTAL_STEPS=10
+STEP=0
+FAILED=() # steps that failed without stopping the update
+
+# ---------------------------------------------------------------------------
+# Output helpers
+# ---------------------------------------------------------------------------
+BOLD="\033[1m"
+DIM="\033[2m"
+GREEN="\033[32m"
+YELLOW="\033[33m"
+RED="\033[31m"
+RESET="\033[0m"
+
+step() {
+  STEP=$((STEP + 1))
+  printf "${BOLD}[%d/%d]${RESET} %s\n" "$STEP" "$TOTAL_STEPS" "$1"
+}
+
+ok() {
+  printf "  ${GREEN}OK${RESET}\n"
+}
+
+skip() {
+  printf "  ${DIM}%s (%s)${RESET}\n" "$(t SKIPPED)" "$1"
+}
+
+fail() {
+  printf "  ${RED}%s:${RESET} %s\n" "$(t FAILED)" "$1" >&2
+  FAILED+=("$1")
+}
+
+warn() {
+  printf "  ${YELLOW}%s:${RESET} %s\n" "$(t Warning)" "$1"
+}
+
+run() {
+  # Runs a command, except in --dry-run mode, where it only shows it.
+  if $DRY_RUN; then
+    printf "  ${DIM}\$ %s${RESET}\n" "$*"
+  else
+    "$@"
+  fi
+}
+
+# Buttons: elegir <question> <default index> <option>...
+# Leaves the chosen option's index in ELEGIDA. Escape (or q) picks the last one, which is «no».
+# Without a terminal (redirected output) the default option is kept.
+BTN_ON="\033[1;97;41m"            # selected button: white on Nothing red
+BTN_OFF="\033[38;5;250;48;5;237m" # the rest: grey on dark grey
+elegir() {
+  local pregunta=$1 i k resto n o
+  ELEGIDA=$2
+  shift 2
+  n=$#
+  [[ -n $pregunta ]] && printf "\n  ${BOLD}%s${RESET}\n\n" "$pregunta" || echo ""
+  if [[ ! -t 0 || ! -t 1 ]]; then
+    local opts=("$@"); printf "  → %s\n" "${opts[ELEGIDA]}"
+    return 0
+  fi
+  # Anything typed before (extra Enter, the password…) does not count as an answer
+  while read -rsn1 -t 0.05 _; do :; done
+  printf "\033[?25l" # no cursor while choosing
+  while :; do
+    printf "\r\033[K  "
+    i=0
+    for o in "$@"; do
+      if ((i == ELEGIDA)); then printf "${BTN_ON}   %s   ${RESET}  " "$o"; else printf "${BTN_OFF}   %s   ${RESET}  " "$o"; fi
+      i=$((i + 1))
+    done
+    if ((n > 1)); then printf "${DIM}  %s${RESET}" "$(t "←/→ choose · Enter accept")"; else printf "${DIM}  Enter${RESET}"; fi
+    k=""
+    IFS= read -rsn1 k || { ELEGIDA=$((n - 1)); break; }
+    if [[ $k == $'\033' ]]; then
+      resto=""
+      IFS= read -rsn2 -t 0.02 resto || true
+      k+=$resto
+    fi
+    case $k in
+    "" | " ") break ;;                                        # Enter or space: accept
+    $'\033[D' | h | $'\033[Z') ((ELEGIDA > 0)) && ELEGIDA=$((ELEGIDA - 1)) ;;
+    $'\033[C' | l | $'\t') ((ELEGIDA < n - 1)) && ELEGIDA=$((ELEGIDA + 1)) ;;
+    $'\033' | q | Q) ELEGIDA=$((n - 1)); break ;;             # Escape: the «no» one
+    s | S | y | Y) ((n == 2)) && { ELEGIDA=0; break; } ;;
+    n | N) ((n == 2)) && { ELEGIDA=1; break; } ;;
+    esac
+  done
+  # Leave only the chosen option drawn
+  local opts=("$@")
+  printf "\r\033[K  ${BTN_ON}   %s   ${RESET}\n\033[?25h" "${opts[ELEGIDA]}"
+}
+
+ask() {
+  # Yes/no question with buttons; $2 = default option (si or no; no by default)
+  local def=1
+  [[ ${2:-no} == si ]] && def=0
+  elegir "$1" "$def" "$(t Yes)" "$(t No)"
+  ((ELEGIDA == 0))
+}
+
+# With --menu (launched from the menu in a terminal that closes when done), whichever way it exits
+# it waits for the button: «Close», or «Reboot now» / «Later» when a reboot is needed
+final_menu() {
+  printf "\033[?25h"
+  $MENU || return 0
+  $CANCELADO && exit 200 # cancelled at the start: just close
+  [[ -t 0 && -t 1 ]] || return 0
+  if $OFRECER_REINICIO; then
+    elegir "$(t "Reboot now?")" 1 "$(t "Reboot now")" "$(t Later)"
+    ((ELEGIDA == 0)) && systemctl reboot
+  else
+    elegir "" 0 "$(t Close)"
+  fi
+  exit 200
+}
+
+# ---------------------------------------------------------------------------
+# Argumentos
+# ---------------------------------------------------------------------------
+ARGS=("$@")
+for arg in "$@"; do
+  case "$arg" in
+  -y | --yes) ASSUME_YES=true ;;
+  --no-aur) DO_AUR=false ;;
+  --no-snapshot) DO_SNAPSHOT=false ;;
+  --dry-run) DRY_RUN=true ;;
+  --menu) MENU=true ;;
+  -h | --help)
+    awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "$0"
+    exit 0
+    ;;
+  *)
+    echo "Unknown argument: $arg (see --help)" >&2
+    exit 1
+    ;;
+  esac
+done
+
+if [[ $EUID -ne 0 && $DRY_RUN == false ]]; then
+  echo "This script needs root privileges (use sudo)." >&2
+  exit 1
+fi
+
+# The session's user (for yay, walker and the shell)
+if [[ $EUID -ne 0 ]]; then TARGET_USER=$(id -un); else TARGET_USER="${SUDO_USER:-}"; fi
+[[ $TARGET_USER == root ]] && TARGET_USER=""
+
+# Messages in the session user's language (the shell's dictionary); English without it
+I18N_HOME=$(getent passwd "${TARGET_USER:-root}" | cut -d: -f6)
+export I18N_HOME
+# shellcheck source=/dev/null
+source "$I18N_HOME/.config/quickshell/i18n/i18n.sh" 2>/dev/null ||
+  t() { local s=$1; shift; if (($#)); then printf -- "$s" "$@"; else printf '%s' "$s"; fi; }
+
+# ---------------------------------------------------------------------------
+# Re-run itself inside systemd-inhibit (so it does not suspend halfway, not even when
+# closing the lid) and `script`, which saves the output to the log without taking the
+# terminal away from pacman (progress bars and colors stay the same).
+# ---------------------------------------------------------------------------
+if ! $DRY_RUN && [[ -z ${ARCH_UPDATE_CHILD:-} ]]; then
+  export ARCH_UPDATE_CHILD=1 SHELL=/bin/bash
+  printf -v CMD '%q ' "$0" "${ARGS[@]}"
+  exec systemd-inhibit --what=sleep:idle:handle-lid-switch --who=arch-update \
+    --why="Updating the system" script -qefc "$CMD" "$LOGFILE"
+fi
+
+trap final_menu EXIT
+
+echo ""
+TITULO=$(t "System update")
+printf '╭%s╮\n│%*s%s%*s│\n╰%s╯\n' "$(printf '─%.0s' {1..37})" $(((37 - ${#TITULO}) / 2)) "" "$TITULO" \
+  $((37 - ${#TITULO} - (37 - ${#TITULO}) / 2)) "" "$(printf '─%.0s' {1..37})"
+echo ""
+
+if ! $ASSUME_YES && ! $DRY_RUN; then
+  # Cancelling just closes (the menu's terminal too)
+  ask "$(t "Update the system?")" si || { t "Cancelled."; echo; CANCELADO=true; exit 0; }
+  echo ""
+fi
+
+if ! $DRY_RUN; then
+  exec 9>"$LOCKFILE"
+  if ! flock -n 9; then
+    t "An update is already running (lock: %s).\n" "$LOCKFILE" >&2
+    exit 1
+  fi
+fi
+
+# Start mark to read pacman.log afterwards (packages and hook output)
+PACLOG_BEFORE=$(date '+%Y-%m-%dT%H:%M:%S')
+
+# ---------------------------------------------------------------------------
+# 1. Espacio libre
+# ---------------------------------------------------------------------------
+step "$(t "Free space")"
+FREE_MB=$(df --output=avail -m / | tail -1 | tr -d ' ')
+if [[ "$FREE_MB" -lt "$MIN_FREE_MB" ]]; then
+  fail "$(t "Only %s MiB free on /, %s MiB are needed." "$FREE_MB" "$MIN_FREE_MB")"
+  exit 1
+fi
+ok
+
+# ---------------------------------------------------------------------------
+# 2. Clean the package cache
+#    Before the snapshot: the cache is inside what gets saved.
+# ---------------------------------------------------------------------------
+step "$(t "Package cache")"
+if command -v paccache >/dev/null 2>&1; then
+  if run paccache -rk"$KEEP_CACHE_VERSIONS"; then
+    ok
+  else
+    warn "$(t "paccache failed; going on")"
+  fi
+else
+  skip "$(t "pacman-contrib (paccache) is missing")"
+fi
+
+# ---------------------------------------------------------------------------
+# 3. Snapper snapshot
+#    -c number + cleanup number: with NUMBER_LIMIT=1 the previous one is deleted.
+#    If it cannot be created, nothing is updated (can be skipped with --no-snapshot).
+# ---------------------------------------------------------------------------
+step "$(t Snapshot)"
+if $DO_SNAPSHOT && command -v snapper >/dev/null 2>&1; then
+  DESC="Pre-update $(date '+%Y-%m-%d %H:%M:%S')"
+  if run snapper -c "$SNAPPER_CONFIG" create -c number --description "$DESC"; then
+    run snapper -c "$SNAPPER_CONFIG" cleanup number || warn "$(t "snapper cleanup number failed: more than one snapshot may be left")"
+    ok
+  else
+    fail "$(t "Could not create the snapshot (snapper -c %s). Use --no-snapshot to update without it." "$SNAPPER_CONFIG")"
+    exit 1
+  fi
+elif ! $DO_SNAPSHOT; then
+  skip "$(t "disabled with --no-snapshot")"
+else
+  skip "$(t "snapper is not installed")"
+fi
+
+# ---------------------------------------------------------------------------
+# 4. Arch keys (before -Syu, in case a signature is new)
+# ---------------------------------------------------------------------------
+step "$(t "Keys (archlinux-keyring)")"
+if run pacman -Sy --needed --noconfirm archlinux-keyring; then
+  ok
+else
+  fail "$(t "Could not update archlinux-keyring")"
+  exit 1
+fi
+
+# ---------------------------------------------------------------------------
+# 5. Repos oficiales
+# ---------------------------------------------------------------------------
+step "$(t "Arch packages")"
+if run pacman -Syu --noconfirm; then
+  ok
+else
+  fail "$(t "pacman -Syu failed")"
+  exit 1
+fi
+
+# ---------------------------------------------------------------------------
+# 6. AUR (if there are AUR packages), with yay as the user
+# ---------------------------------------------------------------------------
+step "$(t "AUR packages")"
+if ! $DO_AUR; then
+  skip "$(t "disabled with --no-aur")"
+elif [[ -z $(pacman -Qmq 2>/dev/null) ]]; then
+  skip "$(t "no AUR packages")"
+elif ! command -v yay >/dev/null 2>&1; then
+  skip "$(t "yay is not installed")"
+elif [[ -z $TARGET_USER ]]; then
+  skip "$(t "yay does not run as root: launch arch-update with sudo from your user")"
+elif run sudo -u "$TARGET_USER" yay -Sua --noconfirm --cleanafter; then
+  ok
+else
+  fail "$(t "yay -Sua failed")"
+fi
+
+# ---------------------------------------------------------------------------
+# 7. Orphans: listed and asked about (no by default; not removed with -y)
+# ---------------------------------------------------------------------------
+step "$(t "Orphan packages")"
+ORPHANS=$(pacman -Qtdq 2>/dev/null || true)
+if [[ -z "$ORPHANS" ]]; then
+  skip "$(t "there are none")"
+else
+  echo "$ORPHANS" | sed 's/^/    /'
+  if $DRY_RUN || $ASSUME_YES; then
+    skip "$(t "not removed without asking")"
+  elif ask "$(t "Remove them?")"; then
+    # shellcheck disable=SC2086
+    if pacman -Rns --noconfirm $ORPHANS; then ok; else fail "$(t "Not all of them could be removed")"; fi
+  else
+    skip "$(t "kept")"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# 8. Boot: initramfs/UKI built and signed
+#    With Secure Boot, a UKI that fails to build or is left unsigned does not
+#    boot. The hooks' output ends up in pacman.log (ALPM-SCRIPTLET).
+# ---------------------------------------------------------------------------
+step "$(t "Boot (UKI and signature)")"
+if ! $DRY_RUN; then
+  BOOT_ERRORS=$(awk -v d="$PACLOG_BEFORE" '$0 >= "["d && /\[ALPM-SCRIPTLET\]/' /var/log/pacman.log 2>/dev/null |
+    grep -E '==> ERROR|ERROR:|[Ff]ailed|not signed' || true)
+  if [[ -n $BOOT_ERRORS ]]; then
+    BOOT_OK=false
+    fail "$(t "Errors in the boot hooks:")"
+    echo "$BOOT_ERRORS" | sed 's/^/    /' >&2
+  fi
+  if command -v sbctl >/dev/null 2>&1; then
+    # Limine, the UKI and its snapshot copies (limine_history); vmlinuz-linux
+    # is not used to boot and is not signed
+    sin_firmar() { sbctl verify 2>&1 | grep -E ' is (not )?signed' | grep -v -e ' is signed$' -e vmlinuz || true; }
+    UNSIGNED=$(sin_firmar)
+    # Something rewrote them without re-signing (e.g. limine-snapper-sync touching Limine after the
+    # snapshot): sbctl sign-all re-signs only those already in its database
+    if [[ -n $UNSIGNED ]]; then
+      warn "$(t "unsigned boot files; signing them again with sbctl sign-all:")"
+      echo "$UNSIGNED" | sed 's/^/    /'
+      sbctl sign-all >/dev/null 2>&1 || true
+      UNSIGNED=$(sin_firmar)
+      [[ -z $UNSIGNED ]] && printf "  ${GREEN}%s${RESET}\n" "$(t "Signed again")"
+    fi
+    if [[ -n $UNSIGNED ]]; then
+      BOOT_OK=false
+      fail "$(t "Unsigned boot files:")"
+      echo "$UNSIGNED" | sed 's/^/    /' >&2
+    fi
+  fi
+  [[ -f $UKI ]] || { BOOT_OK=false; fail "$(t "%s does not exist" "$UKI")"; }
+  $BOOT_OK && ok
+else
+  skip "$(t "dry run")"
+fi
+
+# Packages touched in this run
+UPDATED=0 INSTALLED=0 REMOVED=0
+if [[ -r /var/log/pacman.log ]] && ! $DRY_RUN; then
+  PACLOG_RUN=$(awk -v d="$PACLOG_BEFORE" '$0 >= "["d && /\[ALPM\] /' /var/log/pacman.log)
+  UPDATED=$(grep -c '\[ALPM\] upgraded ' <<<"$PACLOG_RUN" || true)
+  INSTALLED=$(grep -c '\[ALPM\] installed ' <<<"$PACLOG_RUN" || true)
+  REMOVED=$(grep -c '\[ALPM\] removed ' <<<"$PACLOG_RUN" || true)
+fi
+
+# ---------------------------------------------------------------------------
+# 9. Restart the shell and walker/elephant (if something changed)
+# ---------------------------------------------------------------------------
+step "$(t "Shell and launcher")"
+if $DRY_RUN; then
+  skip "$(t "dry run")"
+elif [[ -z $TARGET_USER ]]; then
+  skip "$(t "no session user")"
+elif ((UPDATED + INSTALLED + REMOVED == 0)); then
+  skip "$(t "nothing changed")"
+else
+  USER_ID=$(id -u "$TARGET_USER")
+  RUNDIR="/run/user/$USER_ID"
+  systemctl --user -M "$TARGET_USER@" restart elephant.service walker.service ||
+    warn "$(t "could not restart walker/elephant")"
+  HYPR_SIG=$(ls -t "$RUNDIR/hypr" 2>/dev/null | head -1 || true)
+  if pgrep -u "$TARGET_USER" -x qs >/dev/null && [[ -n $HYPR_SIG ]]; then
+    pkill -u "$TARGET_USER" -x qs || true
+    sleep 1
+    runuser -u "$TARGET_USER" -- env XDG_RUNTIME_DIR="$RUNDIR" HYPRLAND_INSTANCE_SIGNATURE="$HYPR_SIG" \
+      hyprctl dispatch 'hl.dsp.exec_cmd("qs")' >/dev/null || warn "$(t "could not relaunch qs")"
+  fi
+  ok
+fi
+
+# ---------------------------------------------------------------------------
+# 10. Is a reboot needed?
+# ---------------------------------------------------------------------------
+step "$(t Reboot)"
+REASONS=()
+
+# `uname -r` uses dashes (7.2.6-arch2-1) and pacman dots (7.2.6.arch2-1), so
+# they are compared reduced to alphanumerics. The running kernel must
+# start with the package version (flavors like -lts add a suffix).
+RUNNING_KERNEL=$(uname -r)
+KERNEL_PKG=$(cat "/usr/lib/modules/$RUNNING_KERNEL/pkgbase" 2>/dev/null || echo linux)
+INSTALLED_KERNEL=$(pacman -Q "$KERNEL_PKG" 2>/dev/null | awk '{print $2}' || true)
+if [[ -n "$INSTALLED_KERNEL" ]]; then
+  RUNNING_CANON=${RUNNING_KERNEL//[^[:alnum:]]/}
+  INSTALLED_CANON=${INSTALLED_KERNEL//[^[:alnum:]]/}
+  if [[ "$RUNNING_CANON" != "$INSTALLED_CANON"* ]]; then
+    NEEDS_REBOOT=true
+    REASONS+=("$(t "kernel updated (%s -> %s)" "$RUNNING_KERNEL" "$INSTALLED_KERNEL")")
+  fi
+fi
+
+# Hyprland running from a binary that has since been replaced on disk
+for pid in $(pgrep -x Hyprland || true); do
+  if [[ $(readlink "/proc/$pid/exe" 2>/dev/null) == *" (deleted)" ]]; then
+    NEEDS_REBOOT=true
+    REASONS+=("$(t "Hyprland updated")")
+    break
+  fi
+done
+ok
+
+# ---------------------------------------------------------------------------
+# Resumen
+# ---------------------------------------------------------------------------
+echo ""
+if $DRY_RUN; then
+  echo "$(t "Dry run completed (--dry-run, nothing was changed).")"
+  exit 0
+fi
+
+if ((${#FAILED[@]})); then
+  printf "${RED}${BOLD}%s${RESET}\n" "$(t "Update completed with errors:")"
+  printf "  - %s\n" "${FAILED[@]}"
+else
+  echo "$(t "Update completed.")"
+fi
+printf '  %-14s %s\n' "$(t "Upgraded:")" "$UPDATED" "$(t "Installed:")" "$INSTALLED" "$(t "Removed:")" "$REMOVED" \
+  "$(t "Log:")" "$LOGFILE"
+echo ""
+
+if ! $BOOT_OK; then
+  printf "${RED}${BOLD}%s${RESET} %s\n" "$(t "Do not reboot until the boot is fixed")" "$(t "(see above).")"
+  echo "  $(t "Rebuild the UKI: sudo mkinitcpio -P · Check signatures: sudo sbctl verify")"
+  exit 1
+fi
+
+if $NEEDS_REBOOT; then
+  printf "${YELLOW}%s${RESET}\n" "$(t "A reboot is needed:")"
+  for r in "${REASONS[@]}"; do
+    echo "  - $r"
+  done
+  if $MENU; then
+    OFRECER_REINICIO=true # final_menu asks, and also keeps the terminal open
+  elif ! $ASSUME_YES && ask "$(t "Reboot now?")"; then
+    systemctl reboot
+  fi
+else
+  echo "$(t "No reboot needed.")"
+fi
+((${#FAILED[@]} == 0))

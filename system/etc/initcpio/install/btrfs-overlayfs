@@ -1,0 +1,15 @@
+#!/bin/bash
+# Booting read-only snapshots: if the root is a read-only btrfs
+# snapshot, a RAM overlay is mounted on top so the system can write
+# (changes are lost on shutdown). Based on grub-btrfs's hook.
+
+build() {
+    add_module btrfs
+    add_module overlay
+    add_binary btrfs
+    add_runscript
+}
+
+help() {
+    echo "Monta un overlay en RAM sobre la raíz si es una snapshot btrfs de solo lectura."
+}

@@ -1,0 +1,27 @@
+# AUR packages. Installed by «./install.sh» with yay (if it is missing, it is installed first
+# from the AUR with yay-bin). One per line; whatever comes after # is a comment.
+
+walker                    # launcher and system menu
+elephant-bin              # walker's backend, and its providers (without them, «No Results»):
+elephant-desktopapplications-bin
+elephant-calc-bin
+elephant-clipboard-bin
+elephant-files-bin
+elephant-runner-bin
+elephant-symbols-bin
+elephant-unicode-bin
+elephant-websearch-bin
+elephant-providerlist-bin
+elephant-menus-bin
+elephant-windows-bin
+elephant-bookmarks-bin
+elephant-todo-bin
+elephant-archlinuxpkgs-bin
+elephant-bluetooth-bin
+elephant-playerctl-bin
+elephant-wireplumber-bin
+elephant-snippets-bin
+limine-snapper-sync       # snapshots in the Limine menu
+
+# Not installed automatically (builds dlib, slow): face recognition, docs/SYSTEM.md
+#   yay -S howdy-git && sudo howdy add

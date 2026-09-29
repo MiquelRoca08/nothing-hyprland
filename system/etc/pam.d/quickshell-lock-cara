@@ -1,0 +1,8 @@
+# PAM for the shell's lock screen with face recognition (Howdy, IR camera).
+# quickshell/LockScreen.qml only uses it if the GNOME keyring is already unlocked (after
+# autologin, the first unlock uses the password, which is what unlocks it).
+# If the face is not recognized, it continues with quickshell-lock (password). The dash: if
+# pam_howdy.so is missing (Howdy uninstalled), the line is ignored instead of failing.
+
+-auth       sufficient  pam_howdy.so
+auth        include     quickshell-lock

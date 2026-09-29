@@ -1,0 +1,19 @@
+{
+    "id": "nothing",
+    "name": "Nothing",
+    "origin": "integrado",
+    "variant": "dark",
+    "colors": {
+        "bg": "#000000", "bgAlt": "#0a0a0a", "surface": "#141414", "control": "#1e1e1e", "controlHi": "#282828",
+        "border": "#2a2a2a", "fg": "#ffffff", "fgSoft": "#b3b3b3", "dim": "#6e6e6e",
+        "red": "#d71921", "sel": "#d71921", "selHi": "#ee2a33", "selSoft": "#240a0c", "selText": "#ffffff",
+        "accent": "#ffffff", "accentText": "#000000", "dot": "#303030"
+    },
+    "terminal": {
+        "background": "#000000", "foreground": "#e6e6e6",
+        "cursor": "#d71921", "cursorText": "#000000", "viCursor": "#ff6b70",
+        "selection": "#5a0d11", "selectionText": "#ffffff", "searchMatch": "#3a0a0d",
+        "normal": ["#000000", "#d71921", "#8cc48f", "#e8b45f", "#e0454c", "#c77dba", "#6ec6cc", "#e6e6e6"],
+        "bright": ["#6b6b6b", "#ff3b44", "#b0e3b2", "#ffd48a", "#ff6b70", "#e3a6d8", "#9ee6eb", "#ffffff"]
+    }
+}

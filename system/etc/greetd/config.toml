@@ -1,0 +1,12 @@
+# Autologin into Hyprland (uwsm); the shell's lock screen locks right after startup
+# (~/.config/hypr/conf/autostart.lua). After logging out: text login. install.sh fills in @USUARIO@.
+[terminal]
+vt = 1
+
+[initial_session]
+command = "uwsm start -e -D Hyprland hyprland.desktop"
+user = "@USUARIO@"
+
+[default_session]
+command = "agreety --cmd 'uwsm start -e -D Hyprland hyprland.desktop'"
+user = "greeter"
