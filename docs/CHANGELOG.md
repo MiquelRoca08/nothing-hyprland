@@ -80,6 +80,8 @@ comes back or a decision needs its background. Dates are from September 2026.
   `hyprland.lua` («cannot open …/hyprland.lua», no keybinds) and did not reload again. The repo's
   `.githooks/post-merge` (and `post-rewrite`) now run `hyprctl reload` when a pull changes
   `home/.config/hypr`; the `links` module enables them (`core.hooksPath`).
+- **`steam`, `rog-control-center` and `discord` left `conf/autostart.lua`** (they were the reference
+  laptop's own apps): the repo only starts the desktop; personal apps go in `conf/autostart-local.lua`.
 
 ## Launcher and menu (walker)
 

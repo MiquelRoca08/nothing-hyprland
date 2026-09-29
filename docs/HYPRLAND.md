@@ -18,7 +18,7 @@ an error in one module does not stop the others from loading. Generated modules 
 ├── conf/
 │   ├── monitors.lua      YOURS (not in git): monitor layout. Created by install.sh (links) from your previous config or the running session; rewritten by Settings → Displays on apply; can be edited by hand
 │   ├── env.lua           environment: cursor (Win11-Fluent-Dark if installed, else XCursor-Pro-Dark), ~/.local/bin in PATH
-│   ├── autostart.lua     lock-screen (the shell's lock), qs, hypridle, walker/elephant, apps (steam, rog-control-center, discord) and then autostart-local.lua
+│   ├── autostart.lua     lock-screen (the shell's lock), qs, hypridle, walker/elephant, and then your own apps from autostart-local.lua
 │   ├── autostart-local.lua YOURS (not in git, optional): `return { "command", … }`, your own autostart apps; install.sh imports them from your previous config
 │   ├── permissions.lua
 │   ├── look-and-feel.lua borders, shadows, animations

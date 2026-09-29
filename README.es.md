@@ -128,8 +128,8 @@ la regla de respaldo). Los dos archivos solo se escriben si aún no existen: ed�
    escala y pulsa Aplicar (tienes 15 s para Mantener).
 4. **Aspecto:** Ajustes → Personalización → Fondo de pantalla y Temas; Ajustes → Sistema → Idioma.
 5. **Revisa el hardware:** lee [docs/HARDWARE.md](docs/HARDWARE.md) y quita lo que no te sirva
-   (p. ej. `asusctl`/`rog-control-center`, el parche de audio del G14 o las apps que arrancan en
-   `conf/autostart.lua`).
+   (p. ej. `asusctl`/`rog-control-center` o el parche de audio del G14). Tus apps de inicio van en
+   `conf/autostart-local.lua`.
 6. **Navegador predeterminado** (chromium se instala para las WebApps):
    `xdg-settings set default-web-browser firefox.desktop` (ver [docs/SYSTEM.md](docs/SYSTEM.md#other)).
 7. **Opcional:** desbloqueo facial (`yay -S howdy-git`, pon tu cámara en

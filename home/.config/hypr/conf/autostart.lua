@@ -14,13 +14,8 @@ hl.on("hyprland.start", function ()
     -- in ~/.local/bin (added by env.lua).
     hl.exec_cmd("systemctl --user import-environment WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE XDG_CURRENT_DESKTOP PATH && systemctl --user start elephant.service walker.service")
 
-    -- Apps
-    hl.exec_cmd("steam")
-    hl.exec_cmd("rog-control-center")
-    hl.exec_cmd("discord")
-
-    -- Your own apps: conf/autostart-local.lua (not in git), a list of commands. install.sh fills it
-    -- with the autostart apps of the Hyprland config you had before; add yours there
+    -- Your own apps (steam, discord…): conf/autostart-local.lua (not in git), a list of commands.
+    -- install.sh fills it with the autostart apps of the Hyprland config you had before; add yours there
     local ok, own = pcall(require, "conf.autostart-local")
     if ok and type(own) == "table" then
         for _, cmd in ipairs(own) do hl.exec_cmd(cmd) end

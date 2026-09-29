@@ -126,8 +126,8 @@ the fallback rule only). Both files are only written if they do not exist yet: e
    (you get 15 s to Keep).
 4. **Look:** Settings → Personalization → Wallpaper and Themes; Settings → System → Language.
 5. **Hardware check:** read [docs/HARDWARE.md](docs/HARDWARE.md) and remove what does not apply
-   (e.g. `asusctl`/`rog-control-center`, the G14 audio patch, autostarted apps in
-   `conf/autostart.lua`).
+   (e.g. `asusctl`/`rog-control-center`, the G14 audio patch). Your own autostart apps go in
+   `conf/autostart-local.lua`.
 6. **Default browser** (chromium is installed for web apps):
    `xdg-settings set default-web-browser firefox.desktop` (see [docs/SYSTEM.md](docs/SYSTEM.md#other)).
 7. **Optional:** face unlock (`yay -S howdy-git`, set your camera in `system/etc/howdy/config.ini`,
