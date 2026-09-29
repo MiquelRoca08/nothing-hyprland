@@ -2,17 +2,17 @@
 # Restarts elephant and walker (≈ omarchy-restart-walker). Used by walker's emergency entry
 # («Restart walker»), the menu and the pacman hook walker-restart.hook, which runs it as
 # root: then the services of this script's owner are restarted with systemd-run.
-reiniciar() {
+restart_services() {
     systemctl --user restart elephant.service walker.service
 }
 
 if ((EUID == 0)); then
-    usuario=$(stat -c %U "$0")
-    uid=$(id -u "$usuario")
+    owner=$(stat -c %U "$0")
+    uid=$(id -u "$owner")
     # Without a session there are no services to restart
     [[ -d /run/user/$uid ]] || exit 0
-    systemd-run --quiet --wait --uid="$usuario" --setenv=XDG_RUNTIME_DIR="/run/user/$uid" \
-        bash -c "$(declare -f reiniciar); reiniciar"
+    systemd-run --quiet --wait --uid="$owner" --setenv=XDG_RUNTIME_DIR="/run/user/$uid" \
+        bash -c "$(declare -f restart_services); restart_services"
 else
-    reiniciar
+    restart_services
 fi

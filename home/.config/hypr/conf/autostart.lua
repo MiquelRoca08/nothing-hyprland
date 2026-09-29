@@ -1,9 +1,9 @@
--- Autoarranque — https://wiki.hypr.land/Configuring/Basics/Autostart/
+-- Autostart — https://wiki.hypr.land/Configuring/Basics/Autostart/
 
 hl.on("hyprland.start", function ()
     -- "Login" screen: the session starts with autologin (greetd) and locks at once
-    -- with the shell's lock screen (~/.local/bin/bloquear; if the shell does not load, hyprlock)
-    hl.exec_cmd("bloquear")
+    -- with the shell's lock screen (~/.local/bin/lock-screen; if the shell does not load, hyprlock)
+    hl.exec_cmd("lock-screen")
     -- Own shell (bar, notifications, OSD, power menu): ~/.config/quickshell/
     hl.exec_cmd("qs")
     -- Lock on suspend / idle: ~/.config/hypr/hypridle.conf

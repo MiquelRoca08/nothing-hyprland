@@ -27,12 +27,12 @@ SettingsPage {
         command: ["bash", "-c",
             "cd \"$1\" || exit; " +
             "desc() { sed -n '/^--/{s/^-- *//; s/ — https.*//; s/[.:]$//; p; q}' \"$1\" 2>/dev/null; }; " +
-            "listar() { local m f; " +
-            // require("x") and pcall(require, "x") (the optional ones, like the theme's conf/tema.lua)
+            "walk() { local m f; " +
+            // require("x") and pcall(require, "x") (the optional ones, like the theme's conf/theme.lua)
             "  grep -v '^[[:space:]]*--' \"$1\" | grep -oE 'require(\\(|, )\"[^\"]+\"' | sed -E 's/.*\"(.*)\".*/\\1/' | " +
             "  while read -r m; do f=\"${m//.//}.lua\"; printf '%s|%s|%s\\n' \"$2\" \"$f\" \"$(desc \"$f\")\"; " +
-            "    [[ -f $f ]] && listar \"$f\" $(($2 + 1)); done; }; " +
-            "printf '0|hyprland.lua|%s\\n' \"$(desc hyprland.lua)\"; listar hyprland.lua 1",
+            "    [[ -f $f ]] && walk \"$f\" $(($2 + 1)); done; }; " +
+            "printf '0|hyprland.lua|%s\\n' \"$(desc hyprland.lua)\"; walk hyprland.lua 1",
             "hypr", page.dir]
         stdout: StdioCollector {
             onStreamFinished: {

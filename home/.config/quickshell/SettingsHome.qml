@@ -1,6 +1,6 @@
 // Settings → Home: what you see when opening Settings. At the top, summary cards (updates,
 // battery, disk and network) that lead to their section; in the middle, the tasks (saved in
-// ~/.local/share/quickshell/tareas.json, outside the repo: they are personal; Enter adds, the circle
+// ~/.local/share/quickshell/tasks.json, outside the repo: they are personal; Enter adds, the circle
 // marks as done, 󰆴 deletes); at the bottom, the machine's information.
 import Quickshell
 import Quickshell.Io
@@ -83,7 +83,7 @@ SettingsPage {
     Process {
         running: true
         command: ["mkdir", "-p", page.dir]
-        onExited: file.path = page.dir + "/tareas.json"
+        onExited: file.path = page.dir + "/tasks.json"
     }
     FileView {
         id: file

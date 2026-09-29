@@ -11,5 +11,5 @@ build() {
 }
 
 help() {
-    echo "Monta un overlay en RAM sobre la raíz si es una snapshot btrfs de solo lectura."
+    echo "Mounts a RAM overlay over the root if it is a read-only btrfs snapshot."
 }

@@ -129,7 +129,8 @@ Singleton {
         adapter.barOrder = lay         // at once: every assignment saves and reloads the file
     }
     // The system menu's table (~/.local/bin/menu) used to be in Spanish, and its paths and texts are
-    // the keys of menuHidden, menuOrder and the path of menuCustom: rename the old ones once
+    // the keys of menuHidden, menuOrder and the path of menuCustom: rename the old ones once. The
+    // fields of menuCustom were Spanish too ({ ruta, icono, texto, comando } → { path, icon, text, command })
     readonly property var oldMenuNames: ({
         "Aprender": "Learn", "Acciones": "Actions", "Estilo": "Style", "Ajustes": "Settings",
         "Instalar": "Install", "Quitar": "Remove", "Actualizar": "Update", "Acerca de": "About",
@@ -148,7 +149,9 @@ Singleton {
         const same = (a, b) => JSON.stringify(a) === JSON.stringify(b)
         const hidden = (adapter.menuHidden ?? []).map(path)
         const order = (adapter.menuOrder ?? []).map(path)
-        const custom = (adapter.menuCustom ?? []).map(c => Object.assign({}, c, { ruta: path(c.ruta ?? "") }))
+        const custom = (adapter.menuCustom ?? []).map(c => ({
+            path: path(c.path ?? c.ruta ?? ""), icon: c.icon ?? c.icono ?? "",
+            text: c.text ?? c.texto ?? "", command: c.command ?? c.comando ?? "" }))
         if (!same(hidden, adapter.menuHidden ?? [])) adapter.menuHidden = hidden
         if (!same(order, adapter.menuOrder ?? [])) adapter.menuOrder = order
         if (!same(custom, adapter.menuCustom ?? [])) adapter.menuCustom = custom
@@ -191,7 +194,7 @@ Singleton {
             // Order of the modules in each bar zone (see barModules)
             property var settingsOrder: []         // no longer used (order of the old Settings sidebar)
             // System menu (~/.local/bin/menu reads them with jq): hidden ones («Section» or
-            // «Section/Option»), section order and custom entries { ruta, icono, texto, comando }
+            // «Section/Option»), section order and custom entries { path, icon, text, command }
             property var menuHidden: []
             property var menuOrder: []
             property var menuCustom: []
@@ -282,7 +285,7 @@ Singleton {
             "    inhibit_sleep = 3\n" +     // suspend only once the lock screen is up
             "    before_sleep_cmd = loginctl lock-session\n" +
             // On wake, the lock screen tries the face again (it locked with the lid closed)
-            "    after_sleep_cmd = hyprctl dispatch 'hl.dsp.dpms({ action = \"enable\" })'; qs ipc call lock reintentar\n" +
+            "    after_sleep_cmd = hyprctl dispatch 'hl.dsp.dpms({ action = \"enable\" })'; qs ipc call lock retry\n" +
             "}\n"
         if (o.lockMinutes > 0)
             text += `\nlistener {\n    timeout = ${o.lockMinutes * 60}\n    on-timeout = loginctl lock-session\n}\n`

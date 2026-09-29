@@ -1,5 +1,5 @@
 // Settings → Personalization → Themes: the desktop theme (shell, Alacritty, walker, GTK and Hyprland
-// borders; applied by scripts/tema.sh). The installed ones (Nothing is included) with a
+// borders; applied by scripts/theme.sh). The installed ones (Nothing is included) with a
 // preview, «Apply» and remove; tinted-theming's base16 catalog (downloaded once) with
 // search and a light/dark filter: picking one lets you choose the accent among its colors and
 // installs it (the 16 base16 colors are mapped to our layers: backgrounds, texts, accent and terminal).
@@ -14,7 +14,7 @@ SettingsPage {
     title: I18n.tr("Themes")
     subtitle: I18n.tr("Colors of the whole desktop: shell, terminal, launcher, GTK apps and window borders")
     readonly property var o: Config.options
-    readonly property string script: Quickshell.shellPath("scripts/tema.sh")
+    readonly property string script: Quickshell.shellPath("scripts/theme.sh")
 
     property var installed: []      // [{ path, t: theme }]
     property string current: ""
@@ -71,15 +71,15 @@ SettingsPage {
     // --- Processes ---
     Process {
         id: listProc
-        command: [page.script, "lista"]
+        command: [page.script, "list"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const out = []
                 for (const line of text.split("\n")) {
-                    if (line.startsWith("tema|")) {
-                        const i = line.indexOf("|", 5)
-                        try { out.push({ path: line.slice(5, i), t: JSON.parse(line.slice(i + 1)) }) } catch (e) {}
-                    } else if (line.startsWith("actual|")) page.current = line.slice(7)
+                    if (line.startsWith("theme|")) {
+                        const i = line.indexOf("|", 6)
+                        try { out.push({ path: line.slice(6, i), t: JSON.parse(line.slice(i + 1)) }) } catch (e) {}
+                    } else if (line.startsWith("current|")) page.current = line.slice(8)
                 }
                 page.installed = out
             }
@@ -87,11 +87,11 @@ SettingsPage {
     }
     Process {
         id: catProc
-        command: [page.script, "catalogo"]
+        command: [page.script, "catalog"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const keys = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "0A", "0B", "0C", "0D", "0E", "0F"]
-                page.catalog = page.rows(text, "esquema").map(r => {
+                page.catalog = page.rows(text, "scheme").map(r => {
                     const c = {}
                     keys.forEach((k, i) => c[k] = "#" + r[5 + i])
                     return { id: r[1], name: r[2], author: r[3], variant: r[4], c: c }
@@ -107,10 +107,10 @@ SettingsPage {
     }
     function apply(path, name) {
         busy = path; message = I18n.tr("«%1» applied to the whole desktop (open GTK apps pick it up when restarted)").arg(name)
-        applyProc.command = [script, "aplicar", path]
+        applyProc.command = [script, "apply", path]
         applyProc.running = true
     }
-    // Save a theme from the catalog and, if asked, apply it («guardar» returns the path)
+    // Save a theme from the catalog and, if asked, apply it («save» returns the path)
     Process {
         id: saveProc
         property bool andApply: false
@@ -129,7 +129,7 @@ SettingsPage {
         const t = fromBase16(sc, key)
         busy = t.id
         saveProc.andApply = andApply; saveProc.name = t.name
-        saveProc.command = ["sh", "-c", 'printf "%s" "$1" | "$2" guardar', "sh", JSON.stringify(t), script]
+        saveProc.command = ["sh", "-c", 'printf "%s" "$1" | "$2" save', "sh", JSON.stringify(t), script]
         saveProc.running = true
     }
     Process { id: removeProc; onExited: page.load() }
@@ -222,7 +222,7 @@ SettingsPage {
                     c: modelData.t.colors
                     term: modelData.t.terminal?.normal?.slice(1, 7) ?? []
                     selected: inUse
-                    Tag { text: it.modelData.t.origin === "integrado" ? I18n.tr("Included") : "Base16" }
+                    Tag { text: it.modelData.t.origin === "builtin" ? I18n.tr("Included") : "Base16" }
                     Tag { visible: it.inUse; text: I18n.tr("In use") }
                     Item { Layout.fillWidth: true }
                     Button {
@@ -232,9 +232,9 @@ SettingsPage {
                         onClicked: page.apply(it.modelData.path, it.modelData.t.name)
                     }
                     IconButton {
-                        visible: !it.inUse && it.modelData.t.origin !== "integrado"
+                        visible: !it.inUse && it.modelData.t.origin !== "builtin"
                         danger: true
-                        onClicked: { removeProc.command = [page.script, "quitar", it.modelData.t.id]; removeProc.running = true }
+                        onClicked: { removeProc.command = [page.script, "remove", it.modelData.t.id]; removeProc.running = true }
                     }
                 }
             }
@@ -261,7 +261,7 @@ SettingsPage {
             IconButton {
                 icon: "󰑐"
                 busy: catProc.running
-                onClicked: { catProc.command = [page.script, "catalogo", "--actualizar"]; catProc.running = true }
+                onClicked: { catProc.command = [page.script, "catalog", "--refresh"]; catProc.running = true }
             }
         }
         BarText {

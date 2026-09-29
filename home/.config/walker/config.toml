@@ -26,7 +26,7 @@ command = "walker-restart"
 
 
 # System menu (SUPER+SPACE, «menu»): without typing, the sections; while typing, every
-# entry of the menu and its submenus (elephant menus sistema*.lua) and the apps
+# entry of the menu and its submenus (elephant menus system*.lua) and the apps
 [providers.sets.menu]
-default = ["menus:sistemabuscar", "desktopapplications"]
-empty = ["menus:sistema"]
+default = ["menus:systemsearch", "desktopapplications"]
+empty = ["menus:system"]

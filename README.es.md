@@ -6,14 +6,20 @@ Ajustes completa) y un lanzador y menú del sistema con **walker**, con arranque
 UKI) y un instalador interactivo.
 
 > [!NOTE]
-> Hecho y probado en un **ASUS ROG Zephyrus G14 (GA403GM)**: gráfica integrada AMD + NVIDIA,
-> pantalla de 2880×1800 y un monitor externo de 1440p. La parte del escritorio (`home/`) funciona en
-> cualquier Arch con Hyprland; algunos archivos de `system/` (parche de audio del G14, ruta de la
-> cámara IR de Howdy, Secure Boot y la disposición de Limine) son de este portátil: lee lo que
-> pregunta el instalador antes de decir que sí.
+> Hecho en un **ASUS ROG Zephyrus G14 (GA403)**: gráfica integrada AMD + NVIDIA, pantalla de
+> 2880×1800 y un monitor externo de 1440p. El escritorio (`home/`) funciona en cualquier Arch con
+> Hyprland; algunos archivos de `system/` y algunos valores por defecto son de ese portátil.
+> [`docs/HARDWARE.md`](docs/HARDWARE.md) (en inglés) los lista y explica qué cambiar en otro
+> hardware. Lee lo que pregunta el instalador antes de decir que sí.
 
 *[Read in English](README.md)* · La documentación y los comentarios del código están en inglés; la
 interfaz del shell, en inglés o en español (Ajustes → Sistema → Idioma).
+
+## Capturas
+
+<!-- screenshots: docs/img/desktop.png, docs/img/settings.png, docs/img/menu.png, docs/img/lock.png -->
+
+Aquí irán capturas del escritorio, la app de Ajustes, el menú del sistema y la pantalla de bloqueo.
 
 ## Lo más destacado
 
@@ -32,6 +38,24 @@ interfaz del shell, en inglés o en español (Ajustes → Sistema → Idioma).
   (snapper + limine-snapper-sync).
 - **Instalador interactivo por módulos:** cada acción enseña el comando exacto y pregunta antes.
 
+## Requisitos
+
+- **Arch Linux** (x86_64) ya instalado y arrancando, con un usuario que pueda usar `sudo`, conexión
+  a internet y `git`. El instalador se ejecuta como ese usuario, desde una terminal (no como root).
+- **UEFI**, con la partición EFI montada en **`/boot`** (1 GiB aprox.: la imagen unificada del
+  kernel ocupa ~170 MiB y cada snapshot puede guardar su copia).
+- El kernel **`linux`** (el preset de la UKI es `/etc/mkinitcpio.d/linux.preset`) y los **drivers
+  de tu gráfica** (no están en `packages.txt`; p. ej. `nvidia-open` + `nvidia-utils` para NVIDIA).
+- **Limine** como gestor de arranque. El instalador escribe su configuración (`/boot/limine.conf`),
+  pero no instala Limine en la ESP ni crea la entrada de arranque del firmware.
+- **btrfs recomendado**, con la raíz en un subvolumen `@` y home en `@home`: la plantilla de Limine
+  arranca con `rootflags=subvol=/@` y las snapshots lo necesitan. Una raíz btrfs sin subvolúmenes
+  se puede migrar con `scripts/snapshots-setup.sh` ([docs/SYSTEM.md](docs/SYSTEM.md#setting-up-snapshots-on-an-existing-btrfs-root)).
+  Con otro sistema de archivos, edita `system/boot/limine.conf` antes de ejecutar el módulo
+  `system` y sáltate lo de las snapshots.
+- **Opcional:** Secure Boot (las claves las creas y registras tú con `sbctl`), una cámara IR para el
+  desbloqueo facial (Howdy) y un monitor externo con DDC/CI para controlar su brillo.
+
 ## Instalar
 
 ```sh
@@ -40,7 +64,7 @@ cd ~/dotfiles
 ./install.sh          # todos los módulos, preguntando antes de cada acción
 ```
 
-`./install.sh` recorre los módulos de [`instalar/`](instalar/) en orden. Cada uno explica qué hace
+`./install.sh` recorre los módulos de [`installer/`](installer/) en orden. Cada uno explica qué hace
 y, **antes de cada acción, enseña el comando exacto y pregunta** (como el instalador de
 illogical-impulse):
 
@@ -54,22 +78,43 @@ un resumen. Cada módulo solo hace lo que falta, así que se puede repetir tras 
 
 | Módulo | Qué hace |
 |---|---|
-| `paquetes` | `pacman -Syu --needed` con [`paquetes.txt`](paquetes.txt) (de paso actualiza el sistema); antes lista cada paquete con lo que ocupa y el total |
-| `aur` | `yay -S --needed` con [`paquetes-aur.txt`](paquetes-aur.txt); si no hay yay, lo instala |
-| `servicios` | NetworkManager, bluetooth, power-profiles-daemon, cups, avahi y el grupo `i2c` |
-| `enlaces` | Enlaza en `$HOME` las rutas de `enlaces.txt` (lo que ya exista se guarda como `.bak-<fecha>`) |
-| `aspecto` | Prompt de bash, colores del tema, cursor de respaldo, gsettings, servicios de walker/elephant y `xdph.conf` |
-| `sistema` | Copia a `/` los archivos de `system/` que han cambiado, rellenando las plantillas con los datos de este equipo |
-| `arranque` | Opciones del kernel en `/boot/limine.conf`, Plymouth enmascarado y `mkinitcpio -P` si hace falta |
+| `packages` | `pacman -Syu --needed` con [`packages.txt`](packages.txt) (de paso actualiza el sistema); antes lista cada paquete con lo que ocupa y el total |
+| `aur` | `yay -S --needed` con [`packages-aur.txt`](packages-aur.txt); si no hay yay, lo compila antes |
+| `services` | Activa NetworkManager, bluetooth, power-profiles-daemon, cups y avahi; te añade al grupo `i2c` |
+| `links` | Enlaza en `$HOME` las rutas de [`links.txt`](links.txt) desde `home/` (o `private/home/`); lo que ya exista se guarda como `.bak-<fecha>`; quita los enlaces que dejaron archivos renombrados |
+| `appearance` | Prompt de bash, colores del tema, cursor de respaldo, gsettings, servicios de walker/elephant y `xdph.conf` |
+| `system` | Copia a `/` los archivos de `system/` que han cambiado, rellenando las plantillas con los datos de este equipo |
+| `boot` | Opciones del kernel en `/boot/limine.conf`, Plymouth enmascarado y `mkinitcpio -P` si hace falta |
 | `login` | Autologin con greetd en vez de SDDM |
 
-Solo algunos: `./install.sh sistema arranque`. `./install.sh -h` lista los módulos con su
-descripción. Habla inglés o español según `$LANG` (`./install.sh --lang es` lo fuerza). Un módulo
-nuevo es un archivo `instalar/NN-nombre.sh` con `TITULO`, `DESCRIPCION` y una función `modulo()`
-que hace cada acción con `paso "qué hace" comando…` (`instalar/lib.sh`); sus textos pasan por
-`t "texto en inglés"`, con el español en `home/.config/quickshell/i18n/es.js`.
+Solo algunos, por nombre: `./install.sh links system boot`. `./install.sh -h` lista los módulos con
+su descripción. Habla inglés o español según `$LANG`; `--lang en|es` lo fuerza
+(`./install.sh --lang es`).
 
-Desbloqueo facial en la pantalla de bloqueo: `howdy-git` (AUR) y después `sudo howdy add`.
+Un módulo nuevo es un archivo `installer/NN-nombre.sh` con `TITLE`, `DESCRIPTION` y una función
+`module()` que hace cada acción con `step "qué hace" comando…` (`installer/lib.sh`); sus textos
+pasan por `t "texto en inglés"`, con el español en `home/.config/quickshell/i18n/es.js`.
+
+## Primeros pasos después de instalar
+
+1. **Reinicia.** greetd inicia la sesión y aparece enseguida la pantalla de bloqueo: desbloquea con
+   tu contraseña. Si se añadió el grupo `i2c`, así se aplica.
+2. **Atajos:** `SUPER+K` los lista todos, `SUPER+SPACE` abre el menú del sistema y `SUPER+I`,
+   Ajustes. Los principales están en [docs/HYPRLAND.md](docs/HYPRLAND.md#keybinds).
+3. **Pantallas:** el `conf/monitors.lua` que viene es el del portátil de referencia. Abre Ajustes →
+   Sistema → Pantallas, coloca tus monitores, elige resolución y escala y pulsa Aplicar (tienes 15 s
+   para Mantener).
+4. **Aspecto:** Ajustes → Personalización → Fondo de pantalla y Temas; Ajustes → Sistema → Idioma.
+5. **Revisa el hardware:** lee [docs/HARDWARE.md](docs/HARDWARE.md) y quita lo que no te sirva
+   (p. ej. `asusctl`/`rog-control-center`, el parche de audio del G14 o las apps que arrancan en
+   `conf/autostart.lua`).
+6. **Navegador predeterminado** (chromium se instala para las WebApps):
+   `xdg-settings set default-web-browser firefox.desktop` (ver [docs/SYSTEM.md](docs/SYSTEM.md#other)).
+7. **Opcional:** desbloqueo facial (`yay -S howdy-git`, pon tu cámara en
+   `system/etc/howdy/config.ini` y luego `sudo howdy add`), Secure Boot con `sbctl` y snapshots (ver
+   [docs/SYSTEM.md](docs/SYSTEM.md#snapshots-and-updates)).
+8. **Actualiza** desde el menú (Actualizar) o Ajustes → Actualizaciones: ejecuta `arch-update`, que
+   hace antes una snapshot.
 
 ## Cómo está organizado
 
@@ -78,44 +123,49 @@ su sitio de siempre y el cambio ya está en el repo.
 
 | Ruta | Qué es |
 |---|---|
-| `home/` | Todo lo que se enlaza en `$HOME` (lista en `enlaces.txt`) |
-| `home/.config/hypr/` | Hyprland modular (`hyprland.lua` + `conf/`); `conf/shell-settings.lua` e `hypridle.conf` los genera el shell con tus ajustes (fuera de git) |
+| `home/` | Todo lo que se enlaza en `$HOME` (lista en `links.txt`) |
+| `home/.config/hypr/` | Hyprland modular (`hyprland.lua` + `conf/`); `conf/shell-settings.lua`, `conf/theme.lua` e `hypridle.conf` son generados (fuera de git) |
 | `home/.config/quickshell/` | El shell; su `CLAUDE.md` es la guía de diseño y de las trampas de QML |
 | `home/.config/walker/`, `home/.config/elephant/` | Lanzador (tema `nothing`, sobre el de Omarchy), sus proveedores y menús Lua |
-| `home/.config/alacritty/`, `bash/`, `fastfetch/`, `gtk-3.0/`, `gtk-4.0/`, `nvim/plugin/` | Terminal, prompt (con `ls`/`eza` en color), fetch, paleta GTK y portapapeles de nvim |
-| `home/.local/bin/` | Scripts: menú del sistema, capturas, grabación, paquetes, WebApps, TUIs, bloqueo y selector de compartir pantalla |
+| `home/.config/alacritty/`, `bash/`, `fastfetch/`, `gtk-3.0/`, `gtk-4.0/`, `nvim/plugin/clipboard.lua` | Terminal, prompt (con `ls`/`eza` en color), fetch, paleta GTK y portapapeles de nvim |
+| `home/.local/bin/` | Scripts: `menu` (menú del sistema), `screenshot`, `record`, `packages`, `webapp`, `tui`, `lock-screen`, `share-picker`, `menu-keybinds`… |
 | `home/.local/share/` | Fuente Doto (OFL) y el tema GTK «NothingOS» (adw-gtk3-dark renombrado) |
+| `home/.claude/skills/system/` | Skill de agente para arreglar y configurar esta instalación |
 | `system/` | **Copias y plantillas** de archivos del sistema: greetd, PAM, Howdy, Limine, mkinitcpio, splash de la UKI, parche de audio del G14, `arch-update`, hook de pacman y estado de ALSA |
-| `instalar/`, `install.sh` | El instalador |
-| `paquetes.txt`, `paquetes-aur.txt` | Paquetes (repositorios y AUR), cada uno con su comentario |
-| `scripts/` | Generador del logo de arranque, migración de btrfs a snapshots y migración de los datos privados |
+| `installer/`, `install.sh` | El instalador |
+| `packages.txt`, `packages-aur.txt`, `links.txt` | Paquetes (repositorios y AUR, cada uno con su comentario) y las rutas que se enlazan |
+| `scripts/` | Generador del logo de arranque (`boot-logo.py`) y migración de btrfs a snapshots (`snapshots-setup.sh`) |
+| `private/` | Tus archivos, fuera de git (abajo) |
 | `docs/` | Documentación (abajo) |
 
 ### Los datos privados no van en git
 
 Nada personal ni propio de un equipo va en el repo:
 
-- Los archivos de `system/` que necesitan datos del equipo son **plantillas** (`@USUARIO@`,
-  `@HOME@`, `@MACHINE_ID@`, `@PARTUUID_RAIZ@`) que `install.sh` rellena en el equipo donde se
-  ejecuta. `/etc/fstab` no se gestiona.
+- Los archivos de `system/` que necesitan datos del equipo son **plantillas** (`@USER@`, `@HOME@`,
+  `@MACHINE_ID@`, `@ROOT_PARTUUID@`) que el instalador rellena en el equipo donde se ejecuta.
+  `/etc/fstab` no se gestiona.
 - Los ajustes del shell (`home/.config/quickshell/settings.json`) y todo lo que se genera a partir
   de ellos (`conf/shell-settings.lua`, `hypridle.conf`, `xdph.conf`, colores del tema) están en
   `.gitignore`; el shell los escribe al arrancar.
-- `privado/` (ignorada por git) guarda lo tuyo: `privado/home/…` se enlaza en `$HOME` igual que
-  `home/…`. Ahí va lo que no se puede redistribuir, como el cursor Windows 11 Fluent que se usa aquí
-  (sin él, se usa XCursor-Pro, que es libre).
-- Si vienes del repo privado anterior: `scripts/migrar-privado.sh` guarda en `privado/` lo que el
-  repo ya no lleva, sacándolo del historial.
+- **`private/`** (ignorada por git) guarda lo tuyo: `private/home/…` se enlaza en `$HOME` igual que
+  `home/…`. Ahí va lo que no se puede redistribuir, como el cursor Windows 11 Fluent (sin él se usa
+  XCursor-Pro, que es libre). Si existe un `private/MACHINE.md` con notas de tu equipo, la skill de
+  agente lo lee.
 
 ## Documentación
+
+La documentación está en inglés.
 
 | Documento | Qué cuenta |
 |---|---|
 | [`docs/HYPRLAND.md`](docs/HYPRLAND.md) | Config modular de Hyprland, **atajos** y escalado de apps X11 |
-| [`docs/QUICKSHELL.md`](docs/QUICKSHELL.md) | El shell: barra, notificaciones, OSD, Ajustes y brillo |
+| [`docs/QUICKSHELL.md`](docs/QUICKSHELL.md) | El shell: barra, pantalla de bloqueo, Ajustes, temas, brillo, IPC e idioma |
 | [`docs/WALKER.md`](docs/WALKER.md) | Lanzador, menú del sistema, capturas, grabación, paquetes, WebApps y TUIs |
-| [`docs/SYSTEM.md`](docs/SYSTEM.md) | Hardware, audio, login, Limine, arranque silencioso, snapshots, Secure Boot, Howdy y arreglos (también en `~/Documents/SYSTEM.md`) |
-| [`home/.claude/skills/sistema/`](home/.claude/skills/sistema/) | Skill de Claude Code para arreglar y cambiar esta configuración documentándolo en `docs/` |
+| [`docs/SYSTEM.md`](docs/SYSTEM.md) | Aspecto, login, Limine, arranque silencioso, snapshots y `arch-update`, Secure Boot y Howdy |
+| [`docs/HARDWARE.md`](docs/HARDWARE.md) | Notas para el ASUS ROG Zephyrus G14 (GA403) y portátiles híbridos AMD + NVIDIA; qué cambiar en otros equipos |
+| [`docs/CHANGELOG.md`](docs/CHANGELOG.md) | Historial: cambios, arreglos, pruebas y temas pendientes |
+| [`home/.claude/skills/system/`](home/.claude/skills/system/) | Skill de Claude Code para arreglar y cambiar esta configuración documentándolo en `docs/` |
 
 ## Créditos
 

@@ -23,7 +23,7 @@ Rectangle {
     border.color: input.activeFocus ? Theme.sel : Theme.border
 
     BarText {
-        id: lupa
+        id: searchIcon
         visible: root.search
         anchors { left: parent.left; leftMargin: 12; verticalCenter: parent.verticalCenter }
         text: "󰍉"
@@ -34,7 +34,7 @@ Rectangle {
         id: input
         anchors {
             fill: parent
-            leftMargin: root.search ? lupa.implicitWidth + 22 : 10
+            leftMargin: root.search ? searchIcon.implicitWidth + 22 : 10
             rightMargin: root.search ? 36 : 10
         }
         verticalAlignment: TextInput.AlignVCenter

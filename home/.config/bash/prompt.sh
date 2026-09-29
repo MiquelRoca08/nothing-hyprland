@@ -35,15 +35,15 @@ __ls_simple() {
 unalias ls 2>/dev/null
 function ls {
     if [[ -t 1 ]] && command -v eza >/dev/null && __ls_simple "$@"; then
-        local a args=() ocultos=()
+        local a args=() hidden=()
         for a; do
             if [[ $a == -[lahA1]* ]]; then
-                [[ $a == *[aA]* ]] && ocultos=(-a)
+                [[ $a == *[aA]* ]] && hidden=(-a)
             else
                 args+=("$a")
             fi
         done
-        eza -l -g "${ocultos[@]}" --group-directories-first --time-style=long-iso --git --icons=auto \
+        eza -l -g "${hidden[@]}" --group-directories-first --time-style=long-iso --git --icons=auto \
             "${args[@]}"
     else
         command ls --color=auto --group-directories-first "$@"
@@ -72,65 +72,65 @@ __p_var() {
 }
 
 __p_dir() {
-    local ruta=$PWD icono=$'\xef\x81\xbb' cab=''
-    if [[ $ruta == "$HOME" ]]; then
-        ruta='~' icono=$'\xef\x80\x95'
-    elif [[ $ruta == "$HOME"/* ]]; then
-        ruta="~${ruta#"$HOME"}" icono=$'\xef\x80\x95'
-    elif [[ $ruta == / ]]; then
-        __p_out+="\[\e[94m\]$icono \[\e[1m\]/\[\e[0m\]"
+    local path=$PWD icon=$'\xef\x81\xbb' head=''
+    if [[ $path == "$HOME" ]]; then
+        path='~' icon=$'\xef\x80\x95'
+    elif [[ $path == "$HOME"/* ]]; then
+        path="~${path#"$HOME"}" icon=$'\xef\x80\x95'
+    elif [[ $path == / ]]; then
+        __p_out+="\[\e[94m\]$icon \[\e[1m\]/\[\e[0m\]"
         return
     fi
     # Shortens long paths: first folder + … + the last 3
-    local IFS=/ partes
-    read -ra partes <<<"$ruta"
-    local n=${#partes[@]}
+    local IFS=/ parts
+    read -ra parts <<<"$path"
+    local n=${#parts[@]}
     if (( n > 5 )); then
-        cab="${partes[0]}/…/${partes[n-3]}/${partes[n-2]}/"
+        head="${parts[0]}/…/${parts[n-3]}/${parts[n-2]}/"
     elif (( n > 1 )); then
-        cab="${ruta%/*}/"
+        head="${path%/*}/"
     fi
-    __p_out+="\[\e[94m\]$icono \[\e[34m\]"
-    __p_var "$cab"
+    __p_out+="\[\e[94m\]$icon \[\e[34m\]"
+    __p_var "$head"
     __p_out+="\[\e[1;94m\]"
-    __p_var "${partes[n-1]}"
+    __p_var "${parts[n-1]}"
     __p_out+="\[\e[0m\]"
 }
 
 __p_git() {
-    local linea rama='' ab='' sube=0 baja=0 prep=0 mod=0 conf=0 nuevos=0 x y
+    local line branch='' ab='' ahead=0 behind=0 staged=0 mod=0 conflicts=0 untracked=0 x y
     command -v git >/dev/null || return
-    while IFS= read -r linea; do
-        case $linea in
-        '# branch.head '*) rama=${linea#'# branch.head '} ;;
-        '# branch.oid '*) ab=${linea#'# branch.oid '} ;;
+    while IFS= read -r line; do
+        case $line in
+        '# branch.head '*) branch=${line#'# branch.head '} ;;
+        '# branch.oid '*) ab=${line#'# branch.oid '} ;;
         '# branch.ab '*)
-            linea=${linea#'# branch.ab +'}
-            sube=${linea%% *}; baja=${linea##*-} ;;
+            line=${line#'# branch.ab +'}
+            ahead=${line%% *}; behind=${line##*-} ;;
         '1 '* | '2 '*)
-            x=${linea:2:1} y=${linea:3:1}
-            [[ $x != . ]] && ((prep++))
+            x=${line:2:1} y=${line:3:1}
+            [[ $x != . ]] && ((staged++))
             [[ $y != . ]] && ((mod++)) ;;
-        'u '*) ((conf++)) ;;
-        '? '*) ((nuevos++)) ;;
+        'u '*) ((conflicts++)) ;;
+        '? '*) ((untracked++)) ;;
         esac
     done < <(git status --porcelain=v2 --branch 2>/dev/null)
-    [[ -n $rama ]] || return
-    [[ $rama == '(detached)' ]] && rama=${ab:0:7}
+    [[ -n $branch ]] || return
+    [[ $branch == '(detached)' ]] && branch=${ab:0:7}
     __p_out+="  \[\e[35m\]"$'\xee\x9c\xa5'" "
-    __p_var "$rama"
-    ((sube)) && __p_out+=" \[\e[36m\]⇡$sube"
-    ((baja)) && __p_out+=" \[\e[36m\]⇣$baja"
-    ((prep)) && __p_out+=" \[\e[32m\]+$prep"
+    __p_var "$branch"
+    ((ahead)) && __p_out+=" \[\e[36m\]⇡$ahead"
+    ((behind)) && __p_out+=" \[\e[36m\]⇣$behind"
+    ((staged)) && __p_out+=" \[\e[32m\]+$staged"
     ((mod)) && __p_out+=" \[\e[33m\]~$mod"
-    ((conf)) && __p_out+=" \[\e[91m\]!$conf"
-    ((nuevos)) && __p_out+=" \[\e[90m\]?$nuevos"
+    ((conflicts)) && __p_out+=" \[\e[91m\]!$conflicts"
+    ((untracked)) && __p_out+=" \[\e[90m\]?$untracked"
     __p_out+='\[\e[0m\]'
 }
 
 __p_prompt() {
-    local estado=$? __p_out='' flecha=32 trabajos
-    trabajos=$(jobs -p | wc -l)
+    local exit_code=$? __p_out='' arrow=32 jobs_n
+    jobs_n=$(jobs -p | wc -l)
     __p_v=()
     # Window title: the current folder
     printf '\e]0;%s\a' "${PWD/#"$HOME"/\~}"
@@ -147,12 +147,12 @@ __p_prompt() {
         __p_var "${VIRTUAL_ENV##*/}"
         __p_out+="\[\e[0m\]"
     fi
-    ((trabajos)) && __p_out+="  \[\e[36m\]"$'\xef\x80\x93'" $trabajos\[\e[0m\]"
-    if ((estado)); then
-        __p_out+="  \[\e[91m\]✘ $estado\[\e[0m\]"
-        flecha=91
+    ((jobs_n)) && __p_out+="  \[\e[36m\]"$'\xef\x80\x93'" $jobs_n\[\e[0m\]"
+    if ((exit_code)); then
+        __p_out+="  \[\e[91m\]✘ $exit_code\[\e[0m\]"
+        arrow=91
     fi
-    PS1="\n$__p_out\n\[\e[1;${flecha}m\]❯\[\e[0m\] "
+    PS1="\n$__p_out\n\[\e[1;${arrow}m\]❯\[\e[0m\] "
 }
 
 VIRTUAL_ENV_DISABLE_PROMPT=1

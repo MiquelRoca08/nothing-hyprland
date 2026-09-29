@@ -1,5 +1,5 @@
 -- Keybinds — https://wiki.hypr.land/Configuring/Basics/Binds/
--- Every bind has a «description»: it is what the keybind list shows (SUPER+K, menu-atajos) and
+-- Every bind has a «description»: it is what the keybind list shows (SUPER+K, menu-keybinds) and
 -- Settings → Keybinds, which groups them by the «-- ## …» headings and can change the key of
 -- single-line binds (rewriting their first argument here). Descriptions and headings are in
 -- English and are shown in the interface language (~/.config/quickshell/i18n/es.js).
@@ -11,7 +11,7 @@ local menu        = programs.menu
 
 local mainMod = "SUPER" -- Sets "Windows" key as main modifier
 
-local function d(texto) return { description = texto } end
+local function d(text) return { description = text } end
 
 -- ## Apps and windows
 hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd(terminal), d("Terminal"))
@@ -35,7 +35,7 @@ end, d("Next window on the workspace"))
 -- submap_universal: also works with a menu open («menu» submap), to close it
 hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd("menu"), { submap_universal = true, description = "System menu (open / close)" })
 hl.bind(mainMod .. " + ALT + SPACE", hl.dsp.exec_cmd(menu), d("Open apps"))
-hl.bind(mainMod .. " + K", hl.dsp.exec_cmd("menu-atajos"), d("Keybind list"))
+hl.bind(mainMod .. " + K", hl.dsp.exec_cmd("menu-keybinds"), d("Keybind list"))
 hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("walker-launch -m clipboard"), d("Clipboard history"))
 hl.bind(mainMod .. " + CTRL + E", hl.dsp.exec_cmd("walker-launch -m symbols"), d("Emoji and symbols"))
 hl.bind(mainMod .. " + CTRL + O", hl.dsp.exec_cmd("menu actions"), d("Actions (screenshot, record, Do Not Disturb, lock, screen)"))
@@ -44,14 +44,14 @@ hl.bind(mainMod .. " + CTRL + O", hl.dsp.exec_cmd("menu actions"), d("Actions (s
 -- «menu» submap: only while a system menu is open (~/.local/bin/menu turns it on).
 -- Backspace goes back like Escape; every other key reaches walker.
 hl.define_submap("menu", function()
-    hl.bind("BackSpace", hl.dsp.exec_cmd("menu-atras"), d("Go back (in the menus)"))
+    hl.bind("BackSpace", hl.dsp.exec_cmd("menu-back"), d("Go back (in the menus)"))
 end)
 
 -- ## Screenshots and recording
 hl.bind("Print", hl.dsp.exec_cmd("menu screenshot"), d("Screenshot menu"))
 hl.bind(mainMod .. " + CTRL + C", hl.dsp.exec_cmd("menu screenshot"), d("Screenshot menu"))
-hl.bind("SHIFT + Print", hl.dsp.exec_cmd("captura zona"), d("Capture a region"))
-hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("captura zona"), d("Capture a region"))   -- like Win+Shift+S
+hl.bind("SHIFT + Print", hl.dsp.exec_cmd("screenshot region"), d("Capture a region"))
+hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("screenshot region"), d("Capture a region"))   -- like Win+Shift+S
 hl.bind("ALT + Print", hl.dsp.exec_cmd("menu record"), d("Record the screen (or stop)"))
 
 -- ## Windows and workspaces
@@ -88,8 +88,8 @@ hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_
 hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),      { locked = true, repeating = true, description = "Volume down" })
 hl.bind("XF86AudioMute",        hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),     { locked = true, repeating = true, description = "Mute" })
 hl.bind("XF86AudioMicMute",     hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),   { locked = true, repeating = true, description = "Mute the microphone" })
-hl.bind("XF86MonBrightnessUp",  hl.dsp.exec_cmd("~/.config/quickshell/scripts/brillo.sh set 5%+ && qs ipc call osd brightness"),                  { locked = true, repeating = true, description = "Brightness up" })
-hl.bind("XF86MonBrightnessDown",hl.dsp.exec_cmd("~/.config/quickshell/scripts/brillo.sh set 5%- && qs ipc call osd brightness"),                  { locked = true, repeating = true, description = "Brightness down" })
+hl.bind("XF86MonBrightnessUp",  hl.dsp.exec_cmd("~/.config/quickshell/scripts/brightness.sh set 5%+ && qs ipc call osd brightness"),                  { locked = true, repeating = true, description = "Brightness up" })
+hl.bind("XF86MonBrightnessDown",hl.dsp.exec_cmd("~/.config/quickshell/scripts/brightness.sh set 5%- && qs ipc call osd brightness"),                  { locked = true, repeating = true, description = "Brightness down" })
 
 -- Playback (playerctl)
 hl.bind("XF86AudioNext",  hl.dsp.exec_cmd("playerctl next"),       { locked = true, description = "Next track" })
@@ -105,9 +105,9 @@ hl.bind(mainMod .. " + Escape", hl.dsp.exec_cmd("menu system"), d("Power menu (S
 -- Settings (~/.config/quickshell/SettingsWindow.qml)
 hl.bind(mainMod .. " + I", hl.dsp.exec_cmd("qs ipc call settings toggle"), d("Settings"))
 
--- «captura» submap: empty. Settings → Keybinds turns it on while a new combination is chosen,
+-- «capture» submap: empty. Settings → Keybinds turns it on while a new combination is chosen,
 -- so it reaches the window instead of running the bind it already has.
 -- Escape goes back to normal (if something fails, Settings also goes back by itself after a few seconds).
-hl.define_submap("captura", function()
+hl.define_submap("capture", function()
     hl.bind("Escape", hl.dsp.submap("reset"), d("Cancel (while choosing a keybind in Settings)"))
 end)

@@ -1,7 +1,7 @@
 // Settings → System → Keybinds: the keybinds in ~/.config/hypr/conf/keybinds.lua (the
 // source of truth, read as is), grouped by their «-- ## …» headings, with search. «Change»
 // captures a new combination and rewrites the first argument of that hl.bind (Hyprland reloads
-// by itself on save). While capturing, Hyprland is in the empty «captura» submap so the
+// by itself on save). While capturing, Hyprland is in the empty «capture» submap so the
 // combination reaches this page instead of running its keybind (Escape or 10 s idle: cancelled). The ones
 // generated in a loop (workspaces 1–10) are not changed here: they open in nvim at their line.
 import Quickshell
@@ -51,7 +51,7 @@ SettingsPage {
         let section = "General", skip = false
         for (let i = 0; i < lines.length; i++) {
             const raw = lines[i], t = raw.trim()
-            if (/^hl\.define_submap\("captura"/.test(t)) { skip = true; continue }
+            if (/^hl\.define_submap\("capture"/.test(t)) { skip = true; continue }
             if (skip) { if (/^end\)/.test(t)) skip = false; continue }
             const sm = t.match(/^-- ## (.+)/)
             if (sm) { section = sm[1]; continue }
@@ -131,7 +131,7 @@ SettingsPage {
     function startCapture(line) {
         editing = line; captured = null; message = ""
         capturing = true
-        Hyprland.dispatch('hl.dsp.submap("captura")')
+        Hyprland.dispatch('hl.dsp.submap("capture")')
         safety.restart()
         catcher.forceActiveFocus()
     }
@@ -143,10 +143,10 @@ SettingsPage {
     }
     function cancel() { stopCapture(); editing = -1; captured = null }
     Timer { id: safety; interval: 10000; onTriggered: page.stopCapture() }
-    // Escape in the «captura» submap (or any exit from it): cancelled
+    // Escape in the «capture» submap (or any exit from it): cancelled
     Connections {
         target: Hyprland
-        function onRawEvent(event) { if (event.name === "submap" && event.data !== "captura" && page.capturing) page.cancel() }
+        function onRawEvent(event) { if (event.name === "submap" && event.data !== "capture" && page.capturing) page.cancel() }
     }
     Component.onDestruction: stopCapture()
 
@@ -218,7 +218,7 @@ SettingsPage {
         WifiField {
             search: true
             Layout.fillWidth: true
-            placeholder: I18n.tr("Search by action or key (e.g. «captura» or «Super + Q»)")
+            placeholder: I18n.tr("Search by action or key (e.g. «screenshot» or «Super + Q»)")
             onTextChanged: page.query = text.toLowerCase()
         }
         Button { icon: ""; text: "keybinds.lua"; onClicked: page.nvim(0) }

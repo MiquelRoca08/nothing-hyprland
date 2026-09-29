@@ -17,10 +17,10 @@ ColumnLayout {
     // Form state
     property string res: ""
     property string rate: ""
-    property real escala: 1
+    property real outScale: 1
     property int px: 0
     property int py: 0
-    property int giro: 0
+    property int outTransform: 0
     property int vrr: 0
     property bool tenBit: false
 
@@ -48,9 +48,9 @@ ColumnLayout {
             if (nice(v * 100) || nice(v * 3)) out.push(v)
         }
         if (!out.length) out.push(1)
-        return out.includes(escala) ? out : out.concat([escala]).sort((a, b) => a - b)
+        return out.includes(outScale) ? out : out.concat([outScale]).sort((a, b) => a - b)
     }
-    function scaleText(s) { return (Math.round(s * 100) / 100).toString().replace(".", ",") + "×" }
+    function scaleText(s) { return (Math.round(s * 100) / 100).toString().replace(".", I18n.locale.decimalPoint) + "×" }
 
     function load() {
         const i = info
@@ -60,11 +60,11 @@ ColumnLayout {
         const near = same.reduce((a, m) => Math.abs(m.rate - i.refreshRate) < Math.abs(a.rate - i.refreshRate) ? m : a,
                                  same[0] ?? { rate: i.refreshRate.toFixed(2) })
         rate = near.rate
-        escala = Math.round(i.scale * 1e6) / 1e6
+        outScale = Math.round(i.scale * 1e6) / 1e6
         px = i.x; py = i.y
         // The fields are filled by hand (a binding would break when typing in them)
         posX.text = px; posY.text = py
-        giro = i.transform
+        outTransform = i.transform
         vrr = fileVrr >= 0 ? fileVrr : (i.vrr ? 1 : 0)
         tenBit = (i.currentFormat ?? "").includes("2101010")
         dirty = false
@@ -83,8 +83,8 @@ ColumnLayout {
             `    output    = "${output}",\n` +
             `    mode      = "${res}@${rate}",\n` +
             `    position  = "${px}x${py}",\n` +
-            `    scale     = ${escala},\n` +
-            `    transform = ${giro},\n` +
+            `    scale     = ${outScale},\n` +
+            `    transform = ${outTransform},\n` +
             `    vrr       = ${vrr},\n` +
             `    bitdepth  = ${tenBit ? 10 : 8},\n` +
             "})"
@@ -113,13 +113,13 @@ ColumnLayout {
     }
     SettingsRow {
         text: I18n.tr("Scale")
-        description: root.fits(root.escala)
-            ? I18n.tr("Logical size: %1 × %2").arg(Math.round(root.resSize[0] / root.escala)).arg(Math.round(root.resSize[1] / root.escala))
+        description: root.fits(root.outScale)
+            ? I18n.tr("Logical size: %1 × %2").arg(Math.round(root.resSize[0] / root.outScale)).arg(Math.round(root.resSize[1] / root.outScale))
             : I18n.tr("It does not fit this resolution: Hyprland will change it to the closest one")
         Stepper {
             items: root.scales.map(s => root.scaleText(s))
-            index: Math.max(0, root.scales.indexOf(root.escala))
-            onMoved: i => { root.escala = root.scales[i]; root.dirty = true }
+            index: Math.max(0, root.scales.indexOf(root.outScale))
+            onMoved: i => { root.outScale = root.scales[i]; root.dirty = true }
         }
     }
     SettingsRow {
@@ -143,8 +143,8 @@ ColumnLayout {
         text: I18n.tr("Rotation")
         ChoiceChips {
             options: [{ v: 0, label: "0°" }, { v: 1, label: "90°" }, { v: 2, label: "180°" }, { v: 3, label: "270°" }]
-            value: root.giro
-            onChosen: v => { root.giro = v; root.dirty = true }
+            value: root.outTransform
+            onChosen: v => { root.outTransform = v; root.dirty = true }
         }
     }
     SettingsRow {

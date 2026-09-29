@@ -1,5 +1,5 @@
 // Screen-share picker (Discord, browsers…): screens, windows or a region,
-// with a live preview. Opened by ~/.local/bin/compartir-pantalla, which is the
+// with a live preview. Opened by ~/.local/bin/share-picker, which is the
 // custom_picker_binary of xdg-desktop-portal-hyprland (~/.config/hypr/xdph.conf):
 //   qs ipc call sharepicker open <fifo> <xdph window list> <true|false>
 // (and `qs ipc call sharepicker cancel` closes it like Esc)

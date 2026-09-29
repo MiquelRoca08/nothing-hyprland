@@ -6,7 +6,7 @@ Custom Quickshell shell for Hyprland, monochrome in the Nothing OS style. It loa
 (https://github.com/MiquelRoca08/nothing-hyprland, in `home/.config/quickshell/`); `~/.config/quickshell`
 is a symlink to that folder. Commit and push from `~/dotfiles`.
 
-The user writes in Spanish: reply in Spanish. Code comments, `docs/` and commit messages are in
+Reply in the user's language. Code comments, `docs/` and commit messages are in
 English (public repo). UI texts are written in English inside `I18n.tr("…")`, and each new one
 gets its Spanish in `i18n/es.js` (see «Language» in `docs/QUICKSHELL.md`).
 
@@ -17,7 +17,8 @@ gets its Spanish in `i18n/es.js` (see «Language» in `docs/QUICKSHELL.md`).
   Dispatchers are written in Lua; the classic syntax is an error:
   - QML: `Hyprland.dispatch("hl.dsp.focus({ workspace = 3 })")`
   - Shell: `hyprctl dispatch 'hl.dsp.exec_cmd("qs")'`
-- Two monitors with different scales: `eDP-1` (laptop, scale 2) and `DP-9` (27", scale 1).
+- Usually several monitors with different scales (e.g. a HiDPI laptop panel at 2 and an external one
+  at 1): check them with `hyprctl monitors` and test anything size-dependent at both scales.
 
 ## Structure
 
@@ -31,32 +32,32 @@ gets its Spanish in `i18n/es.js` (see «Language» in `docs/QUICKSHELL.md`).
   `accent` (white) is for the bar: workspaces, OSD and power menu. Measurements and the background
   tone come from `Config.options` (do not hard-code them in Theme).
 - **Desktop themes:** `Theme`'s colors come from the active theme,
-  `~/.local/share/quickshell/tema/actual.json` (reread live; without it, Nothing's). A theme is a
-  JSON (`temas/nothing.json` as an example: `colors` with the tokens and `terminal` with the 16
-  terminal colors). `scripts/tema.sh aplicar <json>` applies it to the whole desktop: besides the
-  shell, it generates Alacritty (`~/.local/share/quickshell/tema/alacritty.toml`, imported), walker
-  (`walker/themes/nothing/tema.css`, imported after `colors.css`), GTK (`~/.config/gtk-{3,4}.0/tema.css`,
-  the only thing `gtk.css` imports) and Hyprland's borders (`hypr/conf/tema.lua`, with
+  `~/.local/share/quickshell/theme/current.json` (reread live; without it, Nothing's). A theme is a
+  JSON (`themes/nothing.json` as an example: `colors` with the tokens and `terminal` with the 16
+  terminal colors). `scripts/theme.sh apply <json>` applies it to the whole desktop: besides the
+  shell, it generates Alacritty (`~/.local/share/quickshell/theme/alacritty.toml`, imported), walker
+  (`walker/themes/nothing/theme.css`, imported after `colors.css`), GTK (`~/.config/gtk-{3,4}.0/theme.css`,
+  the only thing `gtk.css` imports) and Hyprland's borders (`hypr/conf/theme.lua`, with
   `pcall(require)`); the ones inside the repo are in `.gitignore`. **A new color:** add it to the
-  JSONs, to `Theme.qml` with its Nothing value and, if another program uses it, to `tema.sh`.
-  Settings → Themes converts base16 schemes (`tema.sh catalogo`) to these tokens (`fromBase16`:
+  JSONs, to `Theme.qml` with its Nothing value and, if another program uses it, to `theme.sh`.
+  Settings → Themes converts base16 schemes (`theme.sh catalog`) to these tokens (`fromBase16`:
   layers mixing base00 with base05; accent chosen among base08…base0F).
 - **Settings design (keep it consistent):** each page is a `SettingsPage` (header with the section
   icon in red, `title` = the sidebar name and a one-line `subtitle`) with `SettingsGroup` (cards)
   and `SettingsRow` (text on the left, control on the right). Controls: `Button` (`kind: "primary"`
   red for the main action of a block, `"secondary"` grey for the rest, `"ghost"` for minor actions
-  like «Restablecer»; `busy` while working), `ChoiceChips` (pick one option; the chosen one in red),
+  like «Reset»; `busy` while working), `ChoiceChips` (pick one option; the chosen one in red),
   `Toggle`, `SliderField`, `WifiField` (text; `search: true` for search boxes: magnifier and an X to
   clear), `Tag` (origin or state tag), `IconButton` (icon-only button: delete, close, remove;
   `danger` turns it red on hover; `overlay` to sit on an image; every trash button is an
-  `IconButton`, and if confirmation is needed, «Cancelar» and a primary `Button` with the action's
+  `IconButton`, and if confirmation is needed, «Cancel» and a primary `Button` with the action's
   text appear in the row) and `UsageBar` (usage: white, red from `critical`). Commands in the
   floating terminal: the `Terminal` singleton (`open`, `run`). Scrolling: every `Flickable` has
   `FastWheel { flick: … }` inside (Qt's is very slow on Linux with wheel and touchpad) and, if it
   can be long, `ScrollBar { parent: theFlickable; flick: … }` (with `parent` the Flickable itself, so
   it does not move with the content). Do not build buttons or chips with `Rectangle` + `MouseArea`:
   use those. What is still to do is `soon` in the tree (`SettingsSoon.qml` shows up with the
-  «Próximamente» label).
+  «Coming soon» label).
 - `Config.qml` (singleton) + `settings.json`: persistent settings edited by the Settings window
   (appearance, bar modules, keyboard/mouse/touchpad, lock, Do Not Disturb).
   `Config.reset(keys)` resets those keys to `Config.defaults`.
@@ -74,18 +75,18 @@ gets its Spanish in `i18n/es.js` (see «Language» in `docs/QUICKSHELL.md`).
   (`ShellState.openSettings(key)` or `qs ipc call settings open <key>` for another one) with
   SUPER+I or the bar's 󰒓 button.
 - Pages: Home (`SettingsHome`: summary cards that lead to their section, tasks in
-  `~/.local/share/quickshell/tareas.json` and machine info); System: `SettingsDisplay`,
+  `~/.local/share/quickshell/tasks.json` and machine info); System: `SettingsDisplay`,
   `SettingsSound`, `SettingsInput`, `SettingsNotifications`, `SettingsPower` (Battery),
   `SettingsKeybinds` (reads and rewrites `conf/keybinds.lua`; `-- ## …` sections; captures in the
-  `captura` submap); `SettingsStorage` (data from `scripts/almacenamiento.sh`); Apps:
-  `SettingsAppsInstalled` and `SettingsAppsInstall` (data from `scripts/aplicaciones.sh`; icons with
+  `capture` submap); `SettingsStorage` (data from `scripts/storage.sh`); Apps:
+  `SettingsAppsInstalled` and `SettingsAppsInstall` (data from `scripts/apps.sh`; icons with
   `AppIcon`); Connections: `SettingsWifi`, `SettingsBluetooth`, `SettingsPrinters` (CUPS; data from
-  `scripts/impresoras.sh`); Personalization: `SettingsWallpaper`, `SettingsThemes` (desktop themes
-  and shapes), `SettingsFonts` (data from `scripts/fuentes.sh`), QuickShell → `SettingsMenu`
+  `scripts/printers.sh`); Personalization: `SettingsWallpaper`, `SettingsThemes` (desktop themes
+  and shapes), `SettingsFonts` (data from `scripts/fonts.sh`), QuickShell → `SettingsMenu`
   (walker menu: `menuHidden`, `menuOrder`, `menuCustom`, read by `~/.local/bin/menu`),
   `SettingsIdle` (Lock screen) and `SettingsBar`, `SettingsHyprland` (hyprland.lua and its
   `require`s, with a button to open them in nvim); `SettingsUpdates` (uses the `UpdateService`
-  singleton, which Home reads too). The rest, «Próximamente».
+  singleton, which Home reads too). The rest, «Coming soon».
 - `MediaService.qml` (singleton): MPRIS players and which one is controlled (the one chosen in the
   panel, otherwise the one playing). Used by `Media.qml` (bar) and `MediaPanel.qml` (panel with
   cover art, progress, controls and the source list).
@@ -99,7 +100,7 @@ gets its Spanish in `i18n/es.js` (see «Language» in `docs/QUICKSHELL.md`).
 - `ShellState.qml` (singleton): shared state (`powerMenuOpen`, `focusedScreen`, Settings page,
   in-memory notification history and unread counter).
 - `SharePicker.qml`: the portal's (xdph) screen-share picker, with `SharePreview` (card with a
-  `ScreencopyView`) and `ShareButton`. Opened by `~/.local/bin/compartir-pantalla` over IPC; it
+  `ScreencopyView`) and `ShareButton`. Opened by `~/.local/bin/share-picker` over IPC; it
   answers through a FIFO (format in the file's comment). Try it: `qs ipc call sharepicker open
   <fifo> '' false` (with a `cat <fifo>` waiting) and close with `qs ipc call sharepicker cancel`.
 - IPC: `settings`, `powermenu`, `lock` and `sharepicker` in their component, `osd` in `Osd.qml`;
@@ -111,10 +112,10 @@ gets its Spanish in `i18n/es.js` (see «Language» in `docs/QUICKSHELL.md`).
   AMD/NVIDIA GPU. `nvidia-smi` is only called if `runtime_status` is already `active`.
 - Lock: `LockScreen.qml` (`WlSessionLock` + `PamContext` with the `quickshell-lock` service, IPC
   `lock`) and `LockSurface.qml` (what shows on each monitor). Always lock with
-  `~/.local/bin/bloquear` (falls back to hyprlock if the shell does not answer). The
-  `$XDG_RUNTIME_DIR/qs-bloqueo` marker makes the shell lock again when it restarts. PAM starts on
+  `~/.local/bin/lock-screen` (falls back to hyprlock if the shell does not answer). The
+  `$XDG_RUNTIME_DIR/qs-locked` marker makes the shell lock again when it restarts. PAM starts on
   lock and on any key (for password-less modules, like face recognition); the password is handed
-  over when PAM asks for it. With Howdy it uses the `quickshell-lock-cara` service, only if the
+  over when PAM asks for it. With Howdy it uses the `quickshell-lock-face` service, only if the
   GNOME keyring is already unlocked (otherwise the password is the only thing that unlocks it).
   `PamContext.abort()` is synchronous and does not emit `completed`; after `error`,
   `completed(Error)` does arrive.
@@ -148,7 +149,7 @@ changes):
   on startup and `FileView.setText` is asynchronous: it is restarted in `onSaved`, not right after
   `setText` (otherwise it starts with the old version).
 
-Also, `SettingsDisplay` rewrites `~/.config/hypr/conf/monitors.lua` on «Aplicar» (only the
+Also, `SettingsDisplay` rewrites `~/.config/hypr/conf/monitors.lua` on «Apply» (only the
 `hl.monitor` of connected monitors, with a rollback after 15 s done by a separate process); that
 file can be edited by hand: the form (`MonitorForm.qml`) reads Hyprland's real values. Reusable
 form pieces: `ChoiceChips.qml` (chips), `Stepper.qml` (‹ value ›) and `WifiField.qml` (text field).
@@ -184,7 +185,7 @@ Do not edit them by hand. `hl.config(...)` **cannot** be applied with `Hyprland.
   ignore its warnings about `Process`, `ShellState`, `Terminal`… not found.
 - **Handlers with loops:** `onTriggered: for (…) …` does not compile; it needs braces:
   `onTriggered: { for (…) … }`.
-- **Brightness:** always use `scripts/brillo.sh get|set` (keys, OSD and Settings), never bare
+- **Brightness:** always use `scripts/brightness.sh get|set` (keys, OSD and Settings), never bare
   `brightnessctl`: there are two backlights and the default one (`nvidia_0`) is fake; the script
   uses the one of the GPU the internal panel is connected to (now `amdgpu_bl1`). sysfs emits no
   events, so the OSD is triggered by the keybind with `qs ipc call osd brightness`. Volume is
@@ -239,24 +240,24 @@ Do not edit them by hand. `hl.config(...)` **cannot** be applied with `Hyprland.
 
 - Errors: `qs log | grep -iE 'error|warn'` (old errors stay in the log; check that the last line
   is `Configuration Loaded`).
-- Screenshots: `grim -o eDP-1 file.png` (and crop with `magick`). Popups, OSD and notifications
+- Screenshots: `grim -o <monitor> file.png` (and crop with `magick`). Popups, OSD and notifications
   show on the **focused** screen:
   `hyprctl monitors -j | jq -r '.[] | select(.focused) | .name'`.
 - Active layers: `hyprctl layers -j` (namespaces `qs-*`). `PopupWindow`s are not layers and do not
   show there.
-- Lock screen: `qs ipc call lock prueba` locks for 15 s and unlocks by itself (does nothing if it
+- Lock screen: `qs ipc call lock test` locks for 15 s and unlocks by itself (does nothing if it
   was already locked). **Do not really lock to test** without the user in front: the password
   cannot be typed from here. And careful with `pkill -x qs` while locked: the shell locks again on
-  startup (`qs-bloqueo` marker), it does not unlock.
+  startup (`qs-locked` marker), it does not unlock.
 - Settings: `qs ipc call settings open <section>` and capture the window with
   `hyprctl clients -j` (title `Ajustes`) + `grim -g`.
 - Panels with `HyprlandFocusGrab` opened with a test `Timer`: since there is one bar per monitor,
   two open and one's grab closes the other (sometimes both). For the screenshot, also set
   `active: false` on the grab and revert afterwards.
 - Typing into walker or other windows: `wtype text`, `wtype -k Escape`.
-- Real clicks, drags and wheel: `scripts/raton.py click x y`, `scripts/raton.py drag x1 y1 x2 y2
-  ["command"]` and `scripts/raton.py scroll x y n` (virtual mouse through uinput; global
-  coordinates like `hyprctl cursorpos`, e.g. DP-9 starts at 1440,-600; the optional command runs
+- Real clicks, drags and wheel: `scripts/mouse.py click x y`, `scripts/mouse.py drag x1 y1 x2 y2
+  ["command"]` and `scripts/mouse.py scroll x y n` (virtual mouse through uinput; global
+  coordinates like `hyprctl cursorpos`, e.g. a monitor placed at 1440,-600 starts there; the optional command runs
   with the button still pressed, handy for screenshots). To locate an icon, capture the bar at real
   size with `grim` and crop with `magick`.
 - Without the virtual mouse, to see a panel temporarily add

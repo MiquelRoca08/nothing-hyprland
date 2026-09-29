@@ -1,7 +1,7 @@
 // Settings → System → Storage: mounted disks with their usage, what can be freed
 // (pacman and yay caches, trash, journal, orphans, unused Flatpak), the apps that
 // take the most space (with «Manage», which leads to Installed apps with the app selected) and the
-// folders in ~ from largest to smallest (click: they open). Data from scripts/almacenamiento.sh; each
+// folders in ~ from largest to smallest (click: they open). Data from scripts/storage.sh; each
 // part in its own process, because the folders (du) are slow. What needs sudo goes to the terminal.
 import Quickshell
 import Quickshell.Io
@@ -13,9 +13,9 @@ SettingsPage {
     title: I18n.tr("Storage")
     subtitle: I18n.tr("What takes up the disk and what can be freed")
 
-    readonly property string script: Quickshell.shellPath("scripts/almacenamiento.sh")
+    readonly property string script: Quickshell.shellPath("scripts/storage.sh")
     property var disks: []          // [{ mount, dev, fs, size, used, free }]
-    property var clean: ({})        // { key: bytes } (+ huerfanosN)
+    property var clean: ({})        // { key: bytes } (+ orphansN)
     property var apps: []           // [{ name, bytes, aur, flatpak, id }]
     property var folders: []        // [{ path, name, bytes }]
     property bool trashConfirm: false
@@ -44,29 +44,29 @@ SettingsPage {
 
     Process {
         id: disksProc
-        command: [page.script, "discos"]
+        command: [page.script, "disks"]
         stdout: StdioCollector {
-            onStreamFinished: page.disks = page.rows(text, "disco").map(r => (
+            onStreamFinished: page.disks = page.rows(text, "disk").map(r => (
                 { mount: r[1], dev: r[2], fs: r[3], size: +r[4], used: +r[5], free: +r[6] }))
         }
     }
     Process {
         id: cleanProc
-        command: [page.script, "limpieza"]
+        command: [page.script, "cleanup"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const c = {}
-                for (const r of page.rows(text, "limpieza")) { c[r[1]] = +r[2]; if (r[3] !== undefined) c[r[1] + "N"] = +r[3] }
+                for (const r of page.rows(text, "cleanup")) { c[r[1]] = +r[2]; if (r[3] !== undefined) c[r[1] + "N"] = +r[3] }
                 page.clean = c
             }
         }
     }
     Process {
         id: appsProc
-        command: [page.script, "paquetes"]
+        command: [page.script, "packages"]
         stdout: StdioCollector {
             onStreamFinished: {
-                const a = page.rows(text, "paquete").map(r => ({ name: r[1], bytes: +r[2], aur: r[3] === "1", flatpak: false, id: r[1] }))
+                const a = page.rows(text, "package").map(r => ({ name: r[1], bytes: +r[2], aur: r[3] === "1", flatpak: false, id: r[1] }))
                     .concat(page.rows(text, "flatpak").map(r => ({ name: r[1], bytes: +r[3], aur: false, flatpak: true, id: r[2] })))
                 page.apps = a.sort((x, y) => y.bytes - x.bytes).slice(0, 10)
             }
@@ -74,9 +74,9 @@ SettingsPage {
     }
     Process {
         id: foldersProc
-        command: [page.script, "carpetas"]
+        command: [page.script, "folders"]
         stdout: StdioCollector {
-            onStreamFinished: page.folders = page.rows(text, "carpeta").map(r => ({ path: r[1], name: r[1].split("/").pop(), bytes: +r[2] }))
+            onStreamFinished: page.folders = page.rows(text, "folder").map(r => ({ path: r[1], name: r[1].split("/").pop(), bytes: +r[2] }))
         }
     }
     Process { id: trashProc; command: ["gio", "trash", "--empty"]; onExited: cleanProc.running = true }
@@ -179,12 +179,12 @@ SettingsPage {
             Button { text: I18n.tr("Clean"); enabled: (page.clean.yay ?? 0) > 0; busy: yayProc.running; onClicked: yayProc.running = true }
         }
         SettingsRow {
-            text: I18n.tr("Trash") + " · " + page.fmt(page.clean.papelera ?? 0)
+            text: I18n.tr("Trash") + " · " + page.fmt(page.clean.trash ?? 0)
             description: page.trashConfirm ? I18n.tr("It is deleted forever. Sure?") : I18n.tr("What you deleted from Nautilus")
             Button {
                 kind: page.trashConfirm ? "primary" : "secondary"
                 text: page.trashConfirm ? I18n.tr("Empty forever") : I18n.tr("Empty")
-                enabled: (page.clean.papelera ?? 0) > 0
+                enabled: (page.clean.trash ?? 0) > 0
                 busy: trashProc.running
                 onClicked: {
                     if (!page.trashConfirm) { page.trashConfirm = true; confirmReset.restart(); return }
@@ -195,23 +195,23 @@ SettingsPage {
             Timer { id: confirmReset; interval: 5000; onTriggered: page.trashConfirm = false }
         }
         SettingsRow {
-            text: I18n.tr("System journal") + " · " + page.fmt(page.clean.registro ?? 0)
+            text: I18n.tr("System journal") + " · " + page.fmt(page.clean.journal ?? 0)
             description: I18n.tr("The systemd journal; it is left at 200 MB")
             Button {
-                text: I18n.tr("Trim"); enabled: (page.clean.registro ?? 0) > 209715200
-                busy: page.running === "registro"
-                onClicked: page.run("registro", I18n.tr("Journal"), "sudo journalctl --vacuum-size=200M")
+                text: I18n.tr("Trim"); enabled: (page.clean.journal ?? 0) > 209715200
+                busy: page.running === "journal"
+                onClicked: page.run("journal", I18n.tr("Journal"), "sudo journalctl --vacuum-size=200M")
             }
         }
         SettingsRow {
-            text: I18n.tr("Orphan packages") + " · " + page.fmt(page.clean.huerfanos ?? 0)
-            description: (page.clean.huerfanosN ?? 0) > 0
-                ? I18n.tr("%1 installed as a dependency that nothing needs anymore").arg(page.clean.huerfanosN)
+            text: I18n.tr("Orphan packages") + " · " + page.fmt(page.clean.orphans ?? 0)
+            description: (page.clean.orphansN ?? 0) > 0
+                ? I18n.tr("%1 installed as a dependency that nothing needs anymore").arg(page.clean.orphansN)
                 : I18n.tr("None: everything installed as a dependency is in use")
             Button {
-                text: I18n.tr("Remove"); enabled: (page.clean.huerfanosN ?? 0) > 0
-                busy: page.running === "huerfanos"
-                onClicked: page.run("huerfanos", I18n.tr("Orphans"), "pacman -Qtd; echo; sudo pacman -Rns $(pacman -Qtdq)")
+                text: I18n.tr("Remove"); enabled: (page.clean.orphansN ?? 0) > 0
+                busy: page.running === "orphans"
+                onClicked: page.run("orphans", I18n.tr("Orphans"), "pacman -Qtd; echo; sudo pacman -Rns $(pacman -Qtdq)")
             }
         }
         SettingsRow {

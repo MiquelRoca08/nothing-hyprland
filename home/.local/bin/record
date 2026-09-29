@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+# Screen recording with gpu-screen-recorder (≈ omarchy-capture-screenrecording).
+#   record [--audio] [--mic]   pick a monitor or region with the mouse and start recording
+#   record --stop              stop the current recording (exits with 1 if there was none)
+# --audio records the system sound and --mic the microphone. Videos go to
+# ~/Videos/Recordings; when stopped, a notification with a thumbnail opens the video.
+source "$HOME/.config/quickshell/i18n/i18n.sh" 2>/dev/null ||
+    t() { local s=$1; shift; if (($#)); then printf -- "$s" "$@"; else printf '%s' "$s"; fi; }
+DIR="$HOME/Videos/Recordings"
+CURRENT="${XDG_RUNTIME_DIR:-/tmp}/record-file"
+
+audio=false mic=false
+for a in "$@"; do
+    case $a in
+    --audio) audio=true ;;
+    --mic) mic=true ;;
+    --stop)
+        pgrep -f '^gpu-screen-recorder' >/dev/null || exit 1
+        # SIGINT so it closes the file properly
+        pkill -SIGINT -f '^gpu-screen-recorder'
+        for _ in {1..50}; do pgrep -f '^gpu-screen-recorder' >/dev/null || break; sleep 0.1; done
+        if pgrep -f '^gpu-screen-recorder' >/dev/null; then
+            pkill -9 -f '^gpu-screen-recorder'
+            notify-send -u critical "$(t "Recording error")" "$(t "It had to be forced to close: the video may be damaged")"
+            exit 0
+        fi
+        file=$(cat "$CURRENT" 2>/dev/null)
+        rm -f "$CURRENT"
+        [[ -f $file ]] || exit 0
+        thumb="${file%.mp4}-thumb.png"
+        ffmpeg -y -i "$file" -ss 00:00:00.1 -vframes 1 -q:v 2 "$thumb" -loglevel quiet
+        (
+            action=$(notify-send "$(t "Recording saved")" "$(t "%s — click to watch it" "$(basename "$file")")" -t 10000 \
+                -i "$thumb" -A "default=$(t Open)")
+            [[ $action == default ]] && xdg-open "$file"
+            rm -f "$thumb"
+        ) >/dev/null 2>&1 &
+        exit 0 ;;
+    esac
+done
+
+mkdir -p "$DIR"
+
+# Monitors and windows of the visible workspace, to pick with slurp
+ws=$(hyprctl monitors -j | jq -r '.[] | select(.focused) | .activeWorkspace.id')
+rects=$(
+    hyprctl monitors -j | jq -r --arg ws "$ws" '.[] | select(.activeWorkspace.id == ($ws | tonumber)) |
+        "\(.x),\(.y) \(.width / .scale | floor)x\(.height / .scale | floor)"'
+    hyprctl clients -j | jq -r --arg ws "$ws" '.[] | select(.workspace.id == ($ws | tonumber)) |
+        "\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"'
+)
+hyprpicker -r -z >/dev/null 2>&1 &
+picker=$!
+sleep .1
+sel=$(echo "$rects" | slurp 2>/dev/null)
+kill $picker 2>/dev/null
+[[ $sel =~ ^(-?[0-9]+),(-?[0-9]+)[[:space:]]([0-9]+)x([0-9]+)$ ]] || exit 0
+x=${BASH_REMATCH[1]} y=${BASH_REMATCH[2]} w=${BASH_REMATCH[3]} h=${BASH_REMATCH[4]}
+
+# A single click = the window or monitor below
+if ((w * h < 20)); then
+    while IFS= read -r r; do
+        [[ $r =~ ^(-?[0-9]+),(-?[0-9]+)[[:space:]]([0-9]+)x([0-9]+)$ ]] || continue
+        if ((x >= BASH_REMATCH[1] && x < BASH_REMATCH[1] + BASH_REMATCH[3] &&
+            y >= BASH_REMATCH[2] && y < BASH_REMATCH[2] + BASH_REMATCH[4])); then
+            x=${BASH_REMATCH[1]} y=${BASH_REMATCH[2]} w=${BASH_REMATCH[3]} h=${BASH_REMATCH[4]}
+            break
+        fi
+    done <<<"$rects"
+fi
+
+# If the region is a whole monitor, record the monitor (better performance)
+monitor=$(hyprctl monitors -j | jq -r --argjson x "$x" --argjson y "$y" --argjson w "$w" --argjson h "$h" \
+    '.[] | select(.x == $x and .y == $y and (.width / .scale | floor) == $w and (.height / .scale | floor) == $h) | .name' | head -1)
+if [[ -n $monitor ]]; then
+    target=(-w "$monitor")
+else
+    target=(-w "${w}x${h}+${x}+${y}")
+fi
+
+devices=""
+$audio && devices="default_output"
+$mic && devices="${devices:+$devices|}default_input"
+sound=()
+[[ -n $devices ]] && sound=(-a "$devices" -ac aac)
+
+file="$DIR/recording-$(date +'%Y-%m-%d_%H-%M-%S').mp4"
+gpu-screen-recorder "${target[@]}" -k auto -f 60 -fm cfr -fallback-cpu-encoding yes \
+    -o "$file" "${sound[@]}" >/dev/null 2>&1 &
+pid=$!
+# Wait until it starts writing (or fails)
+while kill -0 $pid 2>/dev/null && [[ ! -f $file ]]; do sleep 0.2; done
+if kill -0 $pid 2>/dev/null; then
+    echo "$file" >"$CURRENT"
+    notify-send -u low "$(t "Recording")" "$(t "Stop it with the same keybind or Menu → Actions → Record")"
+else
+    notify-send -u critical "$(t "Could not start recording")"
+    exit 1
+fi

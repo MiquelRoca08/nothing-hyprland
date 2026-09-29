@@ -23,6 +23,14 @@ ShellRoot {
         ScreenCorners {}
     }
 
+    // Moves the shell's data to its English names (scripts/migrate.sh; harmless when already done),
+    // then rereads the theme in case its file just moved
+    Process {
+        running: true
+        command: [Quickshell.shellPath("scripts/migrate.sh")]
+        onExited: Theme.reload()
+    }
+
     Notifications {}
     Osd {}
     SharePicker {}

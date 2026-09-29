@@ -14,14 +14,14 @@ SettingsPage {
     subtitle: I18n.tr("The system menu (Super + Space): what shows, in which order, and custom entries")
     readonly property var o: Config.options
 
-    property var entries: []        // [{ route, icon, text, dest, key }] from «menu --entradas-todas»
+    property var entries: []        // [{ route, icon, text, dest, key }] from «menu --all-entries»
     property var open: []           // expanded sections
     function load() { entriesProc.running = true }
     Component.onCompleted: load()
 
     Process {
         id: entriesProc
-        command: [Quickshell.env("HOME") + "/.local/bin/menu", "--entradas-todas"]
+        command: [Quickshell.env("HOME") + "/.local/bin/menu", "--all-entries"]
         stdout: StdioCollector {
             onStreamFinished: page.entries = text.split("\n").filter(l => l.split("|").length === 4).map(l => {
                 const p = l.split("|")
@@ -76,7 +76,7 @@ SettingsPage {
             elide: Text.ElideRight
             Layout.fillWidth: true
         }
-        Tag { visible: er.e.dest.startsWith("propia:"); text: I18n.tr("Added") }
+        Tag { visible: er.e.dest.startsWith("custom:"); text: I18n.tr("Added") }
         IconButton {
             visible: er.isMenu
             icon: page.isOpen(er.e.key) ? "󰅀" : "󰅂"
@@ -159,12 +159,12 @@ SettingsPage {
                 required property int index
                 Layout.fillWidth: true
                 spacing: 10
-                BarText { text: cu.modelData.icono || "󰘳"; font.pixelSize: 15; Layout.preferredWidth: 20 }
+                BarText { text: cu.modelData.icon || "󰘳"; font.pixelSize: 15; Layout.preferredWidth: 20 }
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 1
-                    BarText { text: cu.modelData.texto + "  ·  " + (cu.modelData.ruta ? page.routeView(cu.modelData.ruta) : I18n.tr("Main menu")); elide: Text.ElideRight; Layout.fillWidth: true }
-                    BarText { text: cu.modelData.comando; color: Theme.dim; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true }
+                    BarText { text: cu.modelData.text + "  ·  " + (cu.modelData.path ? page.routeView(cu.modelData.path) : I18n.tr("Main menu")); elide: Text.ElideRight; Layout.fillWidth: true }
+                    BarText { text: cu.modelData.command; color: Theme.dim; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true }
                 }
                 IconButton {
                     danger: true
@@ -195,7 +195,7 @@ SettingsPage {
                 kind: "primary"; icon: "󰐕"; text: I18n.tr("Add")
                 enabled: cText.text.trim() !== "" && cCmd.text.trim() !== ""
                 onClicked: {
-                    page.o.menuCustom = (page.o.menuCustom ?? []).concat([{ ruta: cRoute.route, icono: cIcon.text.trim(), texto: cText.text.trim(), comando: cCmd.text.trim() }])
+                    page.o.menuCustom = (page.o.menuCustom ?? []).concat([{ path: cRoute.route, icon: cIcon.text.trim(), text: cText.text.trim(), command: cCmd.text.trim() }])
                     cIcon.text = ""; cText.text = ""; cCmd.text = ""
                 }
             }

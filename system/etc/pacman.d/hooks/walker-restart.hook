@@ -9,6 +9,6 @@ Target = walker-debug
 Target = elephant*
 
 [Action]
-Description = Reiniciando walker y elephant…
+Description = Restarting walker and elephant…
 When = PostTransaction
 Exec = @HOME@/.local/bin/walker-restart

@@ -71,7 +71,7 @@ hl.window_rule({
     size   = "1000 640",
 })
 
--- TUIs created with «tui crear» in floating mode (≈ Omarchy's floating-window)
+-- TUIs created with «tui create» in floating mode (≈ Omarchy's floating-window)
 hl.window_rule({
     name  = "tui-flotante",
     match = { class = "^TUI\\.float$" },

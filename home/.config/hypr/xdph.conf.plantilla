@@ -1,7 +1,0 @@
-# Template: install.sh (module aspecto) generates xdph.conf with @HOME@ = your home folder.
-# xdg-desktop-portal-hyprland. The shell's own screen-share picker (quickshell/SharePicker.qml)
-# instead of hyprland-share-picker; if the shell does not answer, the script falls back to the stock one.
-# Aplicar: systemctl --user restart xdg-desktop-portal-hyprland
-screencopy {
-    custom_picker_binary = @HOME@/.local/bin/compartir-pantalla
-}

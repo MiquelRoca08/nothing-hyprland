@@ -7,7 +7,7 @@ hl.config({
 
         border_size = 2,
 
-        -- Nothing's; the desktop theme overrides them in conf/tema.lua (generated)
+        -- Nothing's; the desktop theme overrides them in conf/theme.lua (generated)
         col = {
             active_border   = "rgba(ffffffee)",
             inactive_border = "rgba(2e2e2eff)",

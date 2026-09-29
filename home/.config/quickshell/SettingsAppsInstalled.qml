@@ -2,7 +2,7 @@
 // AUR, Flatpak, WebApp, TUI or manual), size and «Uninstall» (with confirmation: pacman and Flatpak
 // in the floating terminal; WebApps and TUIs with their scripts). «All packages»: the installed ones
 // (dependencies too, with a filter). Coming from Storage («Manage»), ShellState.settingsArg
-// brings the app: it is searched and highlighted. Data from scripts/aplicaciones.sh.
+// brings the app: it is searched and highlighted. Data from scripts/apps.sh.
 import Quickshell
 import Quickshell.Io
 import QtQuick
@@ -13,7 +13,7 @@ SettingsPage {
     title: I18n.tr("Installed apps")
     subtitle: I18n.tr("The launcher's, or every package (dependencies too)")
 
-    readonly property string script: Quickshell.shellPath("scripts/aplicaciones.sh")
+    readonly property string script: Quickshell.shellPath("scripts/apps.sh")
     readonly property string bin: Quickshell.env("HOME") + "/.local/bin/"
     property var apps: []           // [{ name, icon, origin, id, bytes }]
     property var packages: []       // [{ name, icon, origin, id, bytes, explicit, desc }]
@@ -39,7 +39,7 @@ SettingsPage {
         function onSettingsChanged() { page.running = ""; page.load() }
     }
 
-    readonly property var origins: ({ repos: "Repos", aur: "AUR", flatpak: "Flatpak", webapp: "WebApp", tui: "TUI", otro: I18n.tr("Manual") })
+    readonly property var origins: ({ repos: "Repos", aur: "AUR", flatpak: "Flatpak", webapp: "WebApp", tui: "TUI", manual: I18n.tr("Manual") })
     function fmt(b) {
         if (!b) return ""
         if (b >= 1073741824) return (b / 1073741824).toFixed(1) + " GB"
@@ -59,16 +59,16 @@ SettingsPage {
 
     Process {
         id: appsProc
-        command: [page.script, "instaladas"]
+        command: [page.script, "installed"]
         stdout: StdioCollector {
             onStreamFinished: page.apps = page.rows(text, "app").map(r => ({ name: r[1], icon: r[2], origin: r[3], id: r[4], bytes: +r[5] }))
         }
     }
     Process {
         id: pkgsProc
-        command: [page.script, "paquetes"]
+        command: [page.script, "packages"]
         stdout: StdioCollector {
-            onStreamFinished: page.packages = page.rows(text, "paquete").map(r => (
+            onStreamFinished: page.packages = page.rows(text, "package").map(r => (
                 { name: r[1], icon: "package-x-generic", origin: r[3] === "1" ? "aur" : "repos", id: r[1], bytes: +r[2],
                   explicit: r[4] === "1", desc: r.slice(5).join("|") }))
         }
@@ -80,7 +80,7 @@ SettingsPage {
         confirm = ""
         running = a.id
         if (a.origin === "webapp" || a.origin === "tui") {
-            removeProc.command = [bin + (a.origin === "webapp" ? "webapp" : "tui"), "quitar", a.id]
+            removeProc.command = [bin + (a.origin === "webapp" ? "webapp" : "tui"), "remove", a.id]
             removeProc.running = true
         } else if (a.origin === "flatpak") Terminal.run(I18n.tr("Uninstall %1").arg(a.name), "flatpak uninstall -y " + a.id)
         else Terminal.run(I18n.tr("Uninstall %1").arg(a.name), "sudo pacman -Rns " + a.id)
@@ -118,7 +118,7 @@ SettingsPage {
         value: page.source
         options: page.view === "apps"
             ? [{ v: "all", label: I18n.tr("All", "apps") }, { v: "repos", label: "Repos" }, { v: "aur", label: "AUR" }, { v: "flatpak", label: "Flatpak" },
-               { v: "webapp", label: "WebApps" }, { v: "tui", label: "TUIs" }, { v: "otro", label: I18n.tr("Manual") }]
+               { v: "webapp", label: "WebApps" }, { v: "tui", label: "TUIs" }, { v: "manual", label: I18n.tr("Manual") }]
             : [{ v: "all", label: I18n.tr("All", "packages") }, { v: "explicit", label: I18n.tr("Explicitly installed") }, { v: "dep", label: I18n.tr("Dependencies") },
                { v: "repos", label: "Repos" }, { v: "aur", label: "AUR" }]
         onChosen: v => page.source = v
@@ -192,7 +192,7 @@ SettingsPage {
                     IconButton {
                         visible: !item.asking
                         danger: true
-                        enabled: item.modelData.origin !== "otro"
+                        enabled: item.modelData.origin !== "manual"
                         busy: page.running === item.modelData.id
                         onClicked: page.confirm = item.modelData.id
                     }

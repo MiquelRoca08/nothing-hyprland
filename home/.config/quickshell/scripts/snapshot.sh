@@ -20,10 +20,10 @@ sudo snapper -c root list | tail -n +1
 
 if command -v sbctl >/dev/null; then
     sleep 3   # limine-snapper-sync rewrites the menu in the background
-    sin_firmar=$(sudo sbctl verify 2>&1 | grep -E ' is not signed' | grep -v vmlinuz)
-    if [[ -n $sin_firmar ]]; then
+    unsigned_list=$(sudo sbctl verify 2>&1 | grep -E ' is not signed' | grep -v vmlinuz)
+    if [[ -n $unsigned_list ]]; then
         echo; echo "$(t "Unsigned boot files: signing them again")"
-        echo "$sin_firmar"
+        echo "$unsigned_list"
         sudo sbctl sign-all && echo "$(t "Signed again")"
     fi
 fi

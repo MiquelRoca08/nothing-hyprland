@@ -1,7 +1,7 @@
 // Floating volume and brightness indicator (bottom, focused screen).
 // Volume: detects PipeWire changes by itself. Brightness: the keybind notifies it with
 // `qs ipc call osd brightness` (sysfs emits no change events).
-// Brightness is read with scripts/brillo.sh (it picks the right backlight).
+// Brightness is read with scripts/brightness.sh (it picks the right backlight).
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
@@ -50,7 +50,7 @@ Scope {
 
     Process {
         id: briProc
-        command: [Quickshell.shellPath("scripts/brillo.sh"), "get"]
+        command: [Quickshell.shellPath("scripts/brightness.sh"), "get"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const pct = parseInt(text)

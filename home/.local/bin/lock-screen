@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Locks the session with the shell's lock screen (quickshell/LockScreen.qml).
+# Used by hypridle (lock_cmd), autostart, the power menu, Settings and the system
+# menu. If the shell does not answer within a few seconds (not running, or its config
+# has an error), it locks with hyprlock so the session is never left open.
+
+# "Session locked" mark: if the shell is starting, it locks as soon as it loads
+touch "$XDG_RUNTIME_DIR/qs-locked"
+
+for _ in $(seq 20); do
+    if qs ipc call lock lock >/dev/null 2>&1 &&
+        [[ $(qs ipc call lock isLocked 2>/dev/null) == true ]]; then
+        exit 0
+    fi
+    sleep 0.25
+done
+
+pidof hyprlock >/dev/null || exec hyprlock

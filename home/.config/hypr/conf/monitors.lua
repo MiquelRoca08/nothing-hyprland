@@ -1,4 +1,4 @@
--- Monitores — https://wiki.hypr.land/Configuring/Basics/Monitors/
+-- Monitors — https://wiki.hypr.land/Configuring/Basics/Monitors/
 -- Rewritten by Settings → Displays on apply (only the hl.monitor blocks of connected monitors;
 -- the others stay as they are). It can also be edited by hand: the form reads Hyprland's actual
 -- values. Anything that is not hl.monitor is lost when applying from Settings.

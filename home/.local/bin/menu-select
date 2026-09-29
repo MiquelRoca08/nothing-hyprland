@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 # Picks an option with walker and prints it (≈ omarchy-menu-select).
-#   menu-select "Formato" jpg png webp [-- walker arguments…]
+#   menu-select "Format" jpg png webp [-- walker arguments…]
 if (($# < 2)); then
     echo "usage: menu-select <prompt> <option>… [-- walker arguments]" >&2
     exit 1
 fi
 prompt=$1
 shift
-opciones=()
+options=()
 while (($#)); do
     if [[ $1 == -- ]]; then shift; break; fi
-    opciones+=("$1")
+    options+=("$1")
     shift
 done
 # Width from the longest text (minimum 295 px): ~10 px per character plus margins
-n=$(printf '%s\n' "${opciones[@]}" "$prompt…" | wc -L)
-ancho=$((n * 10 + 100 > 295 ? n * 10 + 100 : 295))
-printf '%s\n' "${opciones[@]}" |
-    walker-launch --dmenu --width "$ancho" --minheight 1 --maxheight 300 -p "$prompt…" "$@" 2>/dev/null
+n=$(printf '%s\n' "${options[@]}" "$prompt…" | wc -L)
+width=$((n * 10 + 100 > 295 ? n * 10 + 100 : 295))
+printf '%s\n' "${options[@]}" |
+    walker-launch --dmenu --width "$width" --minheight 1 --maxheight 300 -p "$prompt…" "$@" 2>/dev/null

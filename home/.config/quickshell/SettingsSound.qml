@@ -29,7 +29,7 @@ SettingsPage {
     // Hear yourself: links the default microphone to the default output
     Process {
         running: page.listening
-        command: ["pw-loopback", "--name", "qs-prueba-micro"]
+        command: ["pw-loopback", "--name", "qs-mic-test"]
     }
 
     SettingsGroup {

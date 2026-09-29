@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Screen-share picker (xdg-desktop-portal-hyprland, custom_picker_binary in
+# ~/.config/hypr/xdph.conf). The shell draws it (quickshell/SharePicker.qml) and returns the
+# choice through a FIFO; xdph reads it from standard output:
+#   [SELECTION]<r if remembering is allowed>/screen:<monitor> | window:<id> | region:<monitor>@x,y,w,h
+# The window list arrives in $XDPH_WINDOW_SHARING_LIST. If the shell does not answer, the stock
+# picker (hyprland-share-picker) is used. No output = cancelled.
+
+token=false
+[[ " $* " == *" --allow-token "* ]] && token=true
+
+dir=$(mktemp -d "${XDG_RUNTIME_DIR:-/tmp}/share.XXXXXX") || exit 1
+trap 'rm -rf "$dir"' EXIT
+fifo="$dir/answer"
+mkfifo "$fifo"
+
+# `qs ipc call` exits with 0 even when it cannot find the shell or the target («Target not found.»,
+# «No running instances…»): the function returns nothing, so any output means failure
+if ! out=$(qs ipc call sharepicker open "$fifo" "${XDPH_WINDOW_SHARING_LIST:-}" "$token" 2>&1) || [[ -n $out ]]; then
+    rm -rf "$dir"
+    exec hyprland-share-picker "$@"
+fi
+
+# If the shell dies with the picker open, do not leave the request hanging forever
+timeout 600 cat "$fifo"

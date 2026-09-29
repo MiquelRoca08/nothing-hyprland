@@ -1,5 +1,5 @@
 // Settings → Display: brightness of each monitor (internal through backlight, external through DDC/CI) with
-// scripts/brillo.sh, and the layout of each monitor (MonitorForm), saved in
+// scripts/brightness.sh, and the layout of each monitor (MonitorForm), saved in
 // ~/.config/hypr/conf/monitors.lua. Only the hl.monitor of connected monitors are rewritten;
 // those of disconnected ones stay as they were. After applying there are 15 s to confirm or it is undone.
 // «Edit in nvim» opens the file; the form reads the real values, so it respects what was edited.
@@ -29,8 +29,8 @@ SettingsPage {
     // The rollback is done by a separate process: that way it is undone even if Settings is closed or the
     // shell restarts. It keeps the copy and, if not confirmed within 15 s, restores it and reloads.
     readonly property string runDir: Quickshell.env("XDG_RUNTIME_DIR") || "/tmp"
-    readonly property string backupPath: runDir + "/monitors.lua.antes"
-    readonly property string pendingFlag: runDir + "/monitors-pendiente"
+    readonly property string backupPath: runDir + "/monitors.lua.before"
+    readonly property string pendingFlag: runDir + "/monitors-pending"
 
     function apply() {
         const old = monitorsFile.text()
@@ -148,9 +148,9 @@ SettingsPage {
             Layout.fillWidth: true
             implicitHeight: 240
             readonly property var boxes: page.forms.map(f => {
-                const sz = f.resSize, sc = f.escala || 1, rot = f.giro % 2 === 1
+                const sz = f.resSize, sc = f.outScale || 1, rot = f.outTransform % 2 === 1
                 const w = (rot ? sz[1] : sz[0]) / sc, h = (rot ? sz[0] : sz[1]) / sc
-                return { name: f.output, x: f.px, y: f.py, w: w || 1, h: h || 1, res: f.res, scale: f.escala,
+                return { name: f.output, x: f.px, y: f.py, w: w || 1, h: h || 1, res: f.res, scale: f.outScale,
                          focused: f.monitor.focused, dirty: f.dirty }
             })
             readonly property real minX: Math.min(...boxes.map(b => b.x))
@@ -230,7 +230,7 @@ SettingsPage {
             Process {
                 id: getProc
                 running: true
-                command: [Quickshell.shellPath("scripts/brillo.sh"), "get", mon.modelData.name]
+                command: [Quickshell.shellPath("scripts/brightness.sh"), "get", mon.modelData.name]
                 stdout: StdioCollector {
                     onStreamFinished: { const p = parseInt(text); if (!isNaN(p)) mon.brightness = p }
                 }
@@ -245,7 +245,7 @@ SettingsPage {
             }
             function sendNext() {
                 if (pending < 0) return
-                setProc.command = [Quickshell.shellPath("scripts/brillo.sh"), "set", pending + "%", modelData.name]
+                setProc.command = [Quickshell.shellPath("scripts/brightness.sh"), "set", pending + "%", modelData.name]
                 pending = -1
                 setProc.running = true
             }

@@ -1,77 +1,79 @@
 #!/usr/bin/env bash
 # TUIs: a terminal program with its icon in the launcher (≈ Omarchy 3.8.4's omarchy-tui-install and
 # omarchy-tui-remove). It opens in Alacritty with class TUI.float (floating and centered, rule in
-# conf/rules.lua) or TUI.tile (tiled).
-#   tui crear [nombre comando flotante|mosaico [icono]]   without arguments it asks with walker
-#   tui quitar [nombre]                                   without arguments it lets you pick
+# conf/rules.lua) or TUI.tile (tiled). Launchers are marked with X-Created-By=tui (older ones,
+# with X-Creado-Por, still count).
+#   tui create [name command floating|tiled [icon]]   without arguments it asks with walker
+#   tui remove [name]                                 without arguments it lets you pick
 source "$HOME/.config/quickshell/i18n/i18n.sh" 2>/dev/null ||
     t() { local s=$1; shift; if (($#)); then printf -- "$s" "$@"; else printf '%s' "$s"; fi; }
 APPS="$HOME/.local/share/applications"
-ICONOS="$APPS/icons"
+ICONS="$APPS/icons"
+MARK='^X-(Created-By|Creado-Por)=tui$'
 
-avisar() { notify-send -u low "$@"; }
+notify() { notify-send -u low "$@"; }
 
-crear() {
-    local nombre=$1 comando=$2 estilo=$3 icono=$4
-    if [[ -z $nombre ]]; then
-        nombre=$(menu-input "$(t "TUI name")") || exit 0
-        [[ -n $nombre ]] || exit 0
-        comando=$(menu-input "$(t "Command (e.g. btop or lazygit)")") || exit 0
-        [[ -n $comando ]] || exit 0
-        estilo=$(menu-select "$(t Window)" "$(t Floating)" "$(t Tiled)") || exit 0
-        [[ $estilo == "$(t Tiled)" ]] && estilo=mosaico || estilo=flotante
-        icono=$(menu-input "$(t "URL of a PNG/SVG icon (empty = terminal icon)")")
+create() {
+    local name=$1 command=$2 style=$3 icon=$4
+    if [[ -z $name ]]; then
+        name=$(menu-input "$(t "TUI name")") || exit 0
+        [[ -n $name ]] || exit 0
+        command=$(menu-input "$(t "Command (e.g. btop or lazygit)")") || exit 0
+        [[ -n $command ]] || exit 0
+        style=$(menu-select "$(t Window)" "$(t Floating)" "$(t Tiled)") || exit 0
+        [[ $style == "$(t Tiled)" ]] && style=tiled || style=floating
+        icon=$(menu-input "$(t "URL of a PNG/SVG icon (empty = terminal icon)")")
     fi
-    [[ -n $nombre && -n $comando ]] || { echo "The name or the command is missing" >&2; exit 1; }
-    local clase=TUI.float
-    [[ $estilo == mosaico ]] && clase=TUI.tile
+    [[ -n $name && -n $command ]] || { echo "The name or the command is missing" >&2; exit 1; }
+    local class=TUI.float
+    [[ $style == tiled ]] && class=TUI.tile
 
     local png=utilities-terminal
-    if [[ -n $icono ]]; then
-        if [[ -f $icono ]]; then
-            png=$icono
+    if [[ -n $icon ]]; then
+        if [[ -f $icon ]]; then
+            png=$icon
         else
-            mkdir -p "$ICONOS"
-            if curl -fsSL -o "$ICONOS/$nombre.png" "$icono" && [[ -s $ICONOS/$nombre.png ]]; then
-                png="$ICONOS/$nombre.png"
+            mkdir -p "$ICONS"
+            if curl -fsSL -o "$ICONS/$name.png" "$icon" && [[ -s $ICONS/$name.png ]]; then
+                png="$ICONS/$name.png"
             else
-                rm -f "$ICONOS/$nombre.png"
-                avisar "$(t "Could not download the icon")" "$(t "The terminal one is used")"
+                rm -f "$ICONS/$name.png"
+                notify "$(t "Could not download the icon")" "$(t "The terminal one is used")"
             fi
         fi
     fi
 
-    cat >"$APPS/$nombre.desktop" <<EOF
+    cat >"$APPS/$name.desktop" <<EOF
 [Desktop Entry]
 Version=1.0
-Name=$nombre
-Comment=$nombre (TUI)
-Exec=alacritty --class $clase -e $comando
+Name=$name
+Comment=$name (TUI)
+Exec=alacritty --class $class -e $command
 Terminal=false
 Type=Application
 Icon=$png
 StartupNotify=true
-X-Creado-Por=tui
+X-Created-By=tui
 EOF
-    chmod +x "$APPS/$nombre.desktop"
-    avisar "$(t "TUI created: %s" "$nombre")" "$(t "Open it from the launcher (SUPER+ALT+SPACE)")"
+    chmod +x "$APPS/$name.desktop"
+    notify "$(t "TUI created: %s" "$name")" "$(t "Open it from the launcher (SUPER+ALT+SPACE)")"
 }
 
-quitar() {
-    local nombre=$1
-    if [[ -z $nombre ]]; then
-        mapfile -t lista < <(grep -l '^X-Creado-Por=tui' "$APPS"/*.desktop 2>/dev/null | xargs -r -n1 basename | sed 's/\.desktop$//' | sort)
-        ((${#lista[@]})) || { avisar "$(t "No TUI has been created")"; exit 0; }
-        nombre=$(menu-select "$(t "Remove TUI")" "${lista[@]}") || exit 0
-        [[ -n $nombre ]] || exit 0
+remove() {
+    local name=$1 list
+    if [[ -z $name ]]; then
+        mapfile -t list < <(grep -lE "$MARK" "$APPS"/*.desktop 2>/dev/null | xargs -r -n1 basename | sed 's/\.desktop$//' | sort)
+        ((${#list[@]})) || { notify "$(t "No TUI has been created")"; exit 0; }
+        name=$(menu-select "$(t "Remove TUI")" "${list[@]}") || exit 0
+        [[ -n $name ]] || exit 0
     fi
-    grep -q '^X-Creado-Por=tui' "$APPS/$nombre.desktop" 2>/dev/null || { avisar "$(t "«%s» is not a TUI" "$nombre")"; exit 1; }
-    rm -f "$APPS/$nombre.desktop" "$ICONOS/$nombre.png"
-    avisar "$(t "TUI removed: %s" "$nombre")"
+    grep -qE "$MARK" "$APPS/$name.desktop" 2>/dev/null || { notify "$(t "«%s» is not a TUI" "$name")"; exit 1; }
+    rm -f "$APPS/$name.desktop" "$ICONS/$name.png"
+    notify "$(t "TUI removed: %s" "$name")"
 }
 
 case ${1:-} in
-crear) crear "${@:2}" ;;
-quitar) quitar "${@:2}" ;;
-*) echo "usage: tui crear [nombre comando flotante|mosaico [icono]] | quitar [nombre]" >&2; exit 1 ;;
+create) create "${@:2}" ;;
+remove) remove "${@:2}" ;;
+*) echo "usage: tui create [name command floating|tiled [icon]] | remove [name]" >&2; exit 1 ;;
 esac

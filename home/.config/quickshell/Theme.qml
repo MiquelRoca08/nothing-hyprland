@@ -1,6 +1,6 @@
 pragma Singleton
 // Desktop theme: background layers, texts and an accent for what is active (selected, on,
-// main button) and what is critical. The colors come from the active theme (tc, JSON from scripts/tema.sh);
+// main button) and what is critical. The colors come from the active theme (tc, JSON from scripts/theme.sh);
 // without a theme, Nothing's: black, whites and Nothing red. Doto (dot matrix) for
 // the clock and large figures. Do not put loose colors in other files: use these.
 import Quickshell
@@ -8,11 +8,13 @@ import Quickshell.Io
 import QtQuick
 
 Singleton {
-    // Active theme (Settings → Personalization → Themes; written by scripts/tema.sh aplicar). It is
-    // reread when it changes; if there is none, Nothing's (temas/nothing.json)
+    // Active theme (Settings → Personalization → Themes; written by scripts/theme.sh aplicar). It is
+    // reread when it changes; if there is none, Nothing's (themes/nothing.json)
     property var tc: ({})
+    function reload() { themeFile.reload() }
     FileView {
-        path: Quickshell.env("HOME") + "/.local/share/quickshell/tema/actual.json"
+        id: themeFile
+        path: Quickshell.env("HOME") + "/.local/share/quickshell/theme/current.json"
         watchChanges: true
         onFileChanged: reload()
         onLoaded: { try { const j = JSON.parse(text()); if (j.colors) tc = j.colors } catch (e) {} }

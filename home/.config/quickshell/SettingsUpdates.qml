@@ -1,5 +1,5 @@
 // Settings → Updates: pending ones (UpdateService) and each way to update, in the menu's floating
-// terminal (Terminal). «Whole system» and «Repositories only» go through scripts/actualizar.sh
+// terminal (Terminal). «Whole system» and «Repositories only» go through scripts/update.sh
 // (arch-update --menu: snapshot, boot checks and a «Close» button at the end); the rest
 // wait for a key when done. setsid: so they do not depend on qs, which arch-update restarts.
 // Before updating you can see which packages change (from which version to which; the ones that need a reboot,
@@ -15,7 +15,7 @@ SettingsPage {
     readonly property var u: UpdateService
     property bool snapshotting: false
     Component.onCompleted: UpdateService.check(false)
-    // When an update finishes (Terminal.run or actualizar.sh notify), it counts again
+    // When an update finishes (Terminal.run or update.sh notify), it counts again
     Connections {
         target: ShellState
         function onSettingsChanged() { page.snapshotting = false; UpdateService.check(true) }
@@ -79,12 +79,12 @@ SettingsPage {
         SettingsRow {
             text: I18n.tr("Whole system")
             description: I18n.tr("Snapshot, repositories and AUR, cleanup and boot check (arch-update)")
-            Button { kind: "primary"; icon: "󰚰"; text: I18n.tr("Update"); onClicked: Terminal.open(I18n.tr("Update"), [Quickshell.shellPath("scripts/actualizar.sh")]) }
+            Button { kind: "primary"; icon: "󰚰"; text: I18n.tr("Update"); onClicked: Terminal.open(I18n.tr("Update"), [Quickshell.shellPath("scripts/update.sh")]) }
         }
         SettingsRow {
             text: I18n.tr("Repositories only")
             description: I18n.tr("Like the previous one, without the AUR (arch-update --no-aur)")
-            Button { text: I18n.tr("Update"); onClicked: Terminal.open(I18n.tr("Update"), [Quickshell.shellPath("scripts/actualizar.sh"), "--no-aur"]) }
+            Button { text: I18n.tr("Update"); onClicked: Terminal.open(I18n.tr("Update"), [Quickshell.shellPath("scripts/update.sh"), "--no-aur"]) }
         }
         SettingsRow {
             text: I18n.tr("AUR only")

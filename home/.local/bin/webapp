@@ -1,87 +1,90 @@
 #!/usr/bin/env bash
 # Web apps: a website in its own window, with an icon in the launcher (≈ Omarchy 3.8.4's
 # omarchy-webapp-install, omarchy-webapp-remove and omarchy-launch-webapp).
-#   webapp crear [nombre url [icono]]   without arguments it asks with walker
-#   webapp quitar [nombre]              without arguments it lets you pick
-#   webapp abrir <url>                  opens the URL as an app (used by the .desktop files)
+#   webapp create [name url [icon]]   without arguments it asks with walker
+#   webapp remove [name]              without arguments it lets you pick
+#   webapp open <url>                 opens the URL as an app (used by the .desktop files)
 # They open with the default browser if it is Chromium-based (Firefox has no app
-# mode); otherwise with chromium. Launchers go to ~/.local/share/applications (outside the repo).
+# mode); otherwise with chromium. Launchers go to ~/.local/share/applications (outside the repo),
+# marked with X-Created-By=webapp. (Launchers made by older versions use «webapp abrir» and
+# X-Creado-Por: both still work.)
 source "$HOME/.config/quickshell/i18n/i18n.sh" 2>/dev/null ||
     t() { local s=$1; shift; if (($#)); then printf -- "$s" "$@"; else printf '%s' "$s"; fi; }
 APPS="$HOME/.local/share/applications"
-ICONOS="$APPS/icons"
+ICONS="$APPS/icons"
+MARK='^X-(Created-By|Creado-Por)=webapp$'
 
-avisar() { notify-send -u low "$@"; }
+notify() { notify-send -u low "$@"; }
 
-abrir() {
-    local nav bin
-    nav=$(xdg-settings get default-web-browser 2>/dev/null)
-    case $nav in
+open_url() {
+    local browser bin
+    browser=$(xdg-settings get default-web-browser 2>/dev/null)
+    case $browser in
     google-chrome* | chromium* | brave* | microsoft-edge* | vivaldi* | opera* | helium*) ;;
-    *) nav=chromium.desktop ;;
+    *) browser=chromium.desktop ;;
     esac
-    bin=$(sed -n 's/^Exec=\([^ ]*\).*/\1/p' {"$HOME/.local",/usr}/share/applications/"$nav" 2>/dev/null | head -1)
+    bin=$(sed -n 's/^Exec=\([^ ]*\).*/\1/p' {"$HOME/.local",/usr}/share/applications/"$browser" 2>/dev/null | head -1)
     if [[ -z $bin ]]; then
-        avisar "$(t "A Chromium browser is missing")" "$(t "WebApps need chromium (sudo pacman -S chromium)")"
+        notify "$(t "A Chromium browser is missing")" "$(t "WebApps need chromium (sudo pacman -S chromium)")"
         exit 1
     fi
     exec setsid "$bin" --app="$1" "${@:2}"
 }
 
-crear() {
-    local nombre=$1 url=$2 icono=$3
-    if [[ -z $nombre ]]; then
-        nombre=$(menu-input "$(t "WebApp name")") || exit 0
-        [[ -n $nombre ]] || exit 0
+create() {
+    local name=$1 url=$2 icon=$3
+    if [[ -z $name ]]; then
+        name=$(menu-input "$(t "WebApp name")") || exit 0
+        [[ -n $name ]] || exit 0
         url=$(menu-input "$(t "URL (e.g. web.whatsapp.com)")") || exit 0
     fi
-    [[ -n $nombre && -n $url ]] || { echo "The name or the URL is missing" >&2; exit 1; }
+    [[ -n $name && -n $url ]] || { echo "The name or the URL is missing" >&2; exit 1; }
     [[ $url =~ ^[a-zA-Z][a-zA-Z0-9+.-]*: ]] || url="https://$url"
 
     # Icon: the site's favicon; if it cannot be downloaded, a PNG URL is asked for
-    mkdir -p "$ICONOS"
-    local png="$ICONOS/$nombre.png"
-    [[ -n $icono ]] || icono="https://www.google.com/s2/favicons?domain=${url}&sz=128"
-    if ! { curl -fsSL -o "$png" "$icono" && [[ -s $png ]]; }; then
-        icono=$(menu-input "$(t "URL of a PNG icon (dashboardicons.com)")")
-        if ! { [[ -n $icono ]] && curl -fsSL -o "$png" "$icono" && [[ -s $png ]]; }; then
+    mkdir -p "$ICONS"
+    local png="$ICONS/$name.png"
+    [[ -n $icon ]] || icon="https://www.google.com/s2/favicons?domain=${url}&sz=128"
+    if ! { curl -fsSL -o "$png" "$icon" && [[ -s $png ]]; }; then
+        icon=$(menu-input "$(t "URL of a PNG icon (dashboardicons.com)")")
+        if ! { [[ -n $icon ]] && curl -fsSL -o "$png" "$icon" && [[ -s $png ]]; }; then
             rm -f "$png"
             png=applications-internet
         fi
     fi
 
-    cat >"$APPS/$nombre.desktop" <<EOF
+    cat >"$APPS/$name.desktop" <<EOF
 [Desktop Entry]
 Version=1.0
-Name=$nombre
-Comment=$nombre (WebApp)
-Exec=$HOME/.local/bin/webapp abrir $url
+Name=$name
+Comment=$name (WebApp)
+Exec=$HOME/.local/bin/webapp open $url
 Terminal=false
 Type=Application
 Icon=$png
 StartupNotify=true
-X-Creado-Por=webapp
+X-Created-By=webapp
 EOF
-    chmod +x "$APPS/$nombre.desktop"
-    avisar "$(t "WebApp created: %s" "$nombre")" "$(t "Open it from the launcher (SUPER+ALT+SPACE)")"
+    chmod +x "$APPS/$name.desktop"
+    notify "$(t "WebApp created: %s" "$name")" "$(t "Open it from the launcher (SUPER+ALT+SPACE)")"
 }
 
-quitar() {
-    local nombre=$1
-    if [[ -z $nombre ]]; then
-        mapfile -t lista < <(grep -l '^X-Creado-Por=webapp' "$APPS"/*.desktop 2>/dev/null | xargs -r -n1 basename | sed 's/\.desktop$//' | sort)
-        ((${#lista[@]})) || { avisar "$(t "No WebApp has been created")"; exit 0; }
-        nombre=$(menu-select "$(t "Remove WebApp")" "${lista[@]}") || exit 0
-        [[ -n $nombre ]] || exit 0
+remove() {
+    local name=$1 list
+    if [[ -z $name ]]; then
+        mapfile -t list < <(grep -lE "$MARK" "$APPS"/*.desktop 2>/dev/null | xargs -r -n1 basename | sed 's/\.desktop$//' | sort)
+        ((${#list[@]})) || { notify "$(t "No WebApp has been created")"; exit 0; }
+        name=$(menu-select "$(t "Remove WebApp")" "${list[@]}") || exit 0
+        [[ -n $name ]] || exit 0
     fi
-    grep -q '^X-Creado-Por=webapp' "$APPS/$nombre.desktop" 2>/dev/null || { avisar "$(t "«%s» is not a WebApp" "$nombre")"; exit 1; }
-    rm -f "$APPS/$nombre.desktop" "$ICONOS/$nombre.png"
-    avisar "$(t "WebApp removed: %s" "$nombre")"
+    grep -qE "$MARK" "$APPS/$name.desktop" 2>/dev/null || { notify "$(t "«%s» is not a WebApp" "$name")"; exit 1; }
+    rm -f "$APPS/$name.desktop" "$ICONS/$name.png"
+    notify "$(t "WebApp removed: %s" "$name")"
 }
 
 case ${1:-} in
-crear) crear "${@:2}" ;;
-quitar) quitar "${@:2}" ;;
-abrir) [[ -n $2 ]] || exit 1; abrir "${@:2}" ;;
-*) echo "usage: webapp crear [nombre url [icono]] | quitar [nombre] | abrir <url>" >&2; exit 1 ;;
+create) create "${@:2}" ;;
+remove) remove "${@:2}" ;;
+open | abrir) [[ -n $2 ]] || exit 1; open_url "${@:2}" ;;
+*) echo "usage: webapp create [name url [icon]] | remove [name] | open <url>" >&2; exit 1 ;;
 esac

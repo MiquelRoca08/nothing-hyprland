@@ -19,11 +19,12 @@ SettingsPage {
     Process {
         id: importProc
         command: ["sh", "-c",
-            "f=$(zenity --file-selection --title='Importar fondo' " +
+            "f=$(zenity --file-selection --title=\"$1\" " +
             "--filename=\"$HOME/Pictures/\" " +
-            "--file-filter='Imágenes | *.png *.jpg *.jpeg *.webp *.PNG *.JPG *.JPEG *.WEBP') || exit 1; " +
+            "--file-filter=\"$2 | *.png *.jpg *.jpeg *.webp *.PNG *.JPG *.JPEG *.WEBP\") || exit 1; " +
             "d=\"$HOME/Pictures/Wallpapers\"; mkdir -p \"$d\"; " +
-            "case \"$f\" in \"$d\"/*) echo \"$f\" ;; *) cp -n \"$f\" \"$d/\" && echo \"$d/$(basename \"$f\")\" ;; esac"]
+            "case \"$f\" in \"$d\"/*) echo \"$f\" ;; *) cp -n \"$f\" \"$d/\" && echo \"$d/$(basename \"$f\")\" ;; esac",
+            "sh", I18n.tr("Import wallpaper"), I18n.tr("Images")]
         stdout: StdioCollector {
             onStreamFinished: {
                 const path = text.trim()

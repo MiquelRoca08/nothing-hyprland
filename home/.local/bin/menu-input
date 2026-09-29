@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Asks for a text with walker and prints it (≈ omarchy-menu-input).
-#   menu-input "Paquete del AUR" [walker arguments…]
-prompt=${1:-Escribe}
+#   menu-input "AUR package" [walker arguments…]
+prompt=${1:-Type}
 (($#)) && shift
 # Width from the text (minimum 295 px): ~10 px per character plus margins
 n=$(printf '%s…' "$prompt" | wc -L)
-ancho=$((n * 10 + 100 > 295 ? n * 10 + 100 : 295))
-walker-launch --dmenu --inputonly --width "$ancho" --minheight 1 --maxheight 1 -p "$prompt…" "$@" </dev/null 2>/dev/null
+width=$((n * 10 + 100 > 295 ? n * 10 + 100 : 295))
+walker-launch --dmenu --inputonly --width "$width" --minheight 1 --maxheight 1 -p "$prompt…" "$@" </dev/null 2>/dev/null

@@ -10,7 +10,7 @@
 //
 // PAM services (system/etc/pam.d/ in the repo):
 //   quickshell-lock       password (and unlocks the GNOME keyring)
-//   quickshell-lock-cara  Howdy and, if it fails, the same as quickshell-lock
+//   quickshell-lock-face  Howdy and, if it fails, the same as quickshell-lock
 // The face is only used with the keyring already unlocked: after autologin it is locked and
 // only the password unlocks it, so the first unlock is always with the password.
 import Quickshell
@@ -28,7 +28,7 @@ Scope {
     property bool statusIsError: false
     property bool submitted: false       // Enter pressed: handed over when PAM asks for it
     property bool busy: false            // password handed over, waiting for PAM
-    property bool testing: false         // `qs ipc call lock prueba`: unlocks by itself
+    property bool testing: false         // `qs ipc call lock test`: unlocks by itself
     property bool face: false            // the current attempt uses the face
     property bool scanning: false        // Howdy looking for the face
     property real promptSince: 0         // when PAM asked for the password (ms)
@@ -36,7 +36,7 @@ Scope {
 
     // "Locked session" marker: if the shell restarts (or starts after
     // autologin), it locks again on load
-    readonly property string marker: Quickshell.env("XDG_RUNTIME_DIR") + "/qs-bloqueo"
+    readonly property string marker: Quickshell.env("XDG_RUNTIME_DIR") + "/qs-locked"
 
     function lock() {
         // A real lock during a test turns it into a real lock
@@ -68,7 +68,7 @@ Scope {
     function beginPam(useFace) {
         if (!sessionLock.locked || pam.active) return
         face = useFace
-        pam.config = useFace ? "quickshell-lock-cara" : passwordService
+        pam.config = useFace ? "quickshell-lock-face" : passwordService
         // With Howdy installed but the keyring locked (after boot): so it does not look like a failure
         if (faceInstalled && !useFace && status === "") {
             status = I18n.tr("After boot, password: it unlocks the keyring")
@@ -88,7 +88,7 @@ Scope {
     // Tries the face again if it already failed (nobody in front, lid closed…)
     // and nothing has been typed. If Howdy is still looking, it retries when it finishes.
     // Used by activity() and, on wake from suspend, by hypridle
-    // (`qs ipc call lock reintentar`): closing the lid locks and Howdy is skipped
+    // (`qs ipc call lock retry`): closing the lid locks and Howdy is skipped
     // (abort_if_lid_closed), and on opening it nothing is pressed
     property bool retryWhenPrompted: false
     function retryFace() {
@@ -132,7 +132,7 @@ Scope {
     Process {
         running: true
         command: ["sh", "-c", "test -e /etc/pam.d/quickshell-lock && echo clave; " +
-                              "test -e /etc/pam.d/quickshell-lock-cara && command -v howdy >/dev/null && echo cara"]
+                              "test -e /etc/pam.d/quickshell-lock-face && command -v howdy >/dev/null && echo cara"]
         stdout: StdioCollector {
             onStreamFinished: {
                 if (text.includes("clave")) root.passwordService = "quickshell-lock"
@@ -218,15 +218,15 @@ Scope {
 
     // qs ipc call lock lock      → lock
     // qs ipc call lock isLocked  → true/false
-    // qs ipc call lock reintentar → try the face again (used by hypridle on wake)
-    // qs ipc call lock prueba    → lock for 15 s and unlock by itself (to see how it looks;
+    // qs ipc call lock retry → try the face again (used by hypridle on wake)
+    // qs ipc call lock test    → lock for 15 s and unlock by itself (to see how it looks;
     //                              does nothing if it was already locked)
     IpcHandler {
         target: "lock"
         function lock(): void { root.lock() }
         function isLocked(): bool { return sessionLock.locked }
-        function reintentar(): void { root.retryFace() }
-        function prueba(): void {
+        function retry(): void { root.retryFace() }
+        function test(): void {
             if (sessionLock.locked) return
             root.lock()            // sets testing to false…
             root.testing = true    // …and here it is marked as a test

@@ -3,7 +3,7 @@
 // the default (text: sans-serif + GTK interface; monospace: monospace + GTK's mono font);
 // remove (the package in the terminal, or the files if they are the user's); search and install font
 // packages from the repositories and the AUR; and install from a file (to ~/.local/share/fonts).
-// Data from scripts/fuentes.sh.
+// Data from scripts/fonts.sh.
 import Quickshell
 import Quickshell.Io
 import QtQuick
@@ -14,7 +14,7 @@ SettingsPage {
     title: I18n.tr("Fonts")
     subtitle: I18n.tr("The installed ones and how they look; search, install or remove")
 
-    readonly property string script: Quickshell.shellPath("scripts/fuentes.sh")
+    readonly property string script: Quickshell.shellPath("scripts/fonts.sh")
     property var fonts: []          // [{ family, origin, pkg, files, bytes, dir, mono }]
     property string defSans: ""     // default fonts (fc-match sans-serif / monospace)
     property string defMono: ""
@@ -29,7 +29,7 @@ SettingsPage {
     property string message: ""
     readonly property int limit: 120
 
-    readonly property var origins: ({ repos: "Repos", aur: "AUR", usuario: I18n.tr("Yours"), otro: I18n.tr("System") })
+    readonly property var origins: ({ repos: "Repos", aur: "AUR", user: I18n.tr("Yours"), other: I18n.tr("System") })
     function load() { listProc.running = true; uiProc.running = true }
     Component.onCompleted: load()
     Connections {
@@ -46,10 +46,10 @@ SettingsPage {
 
     Process {
         id: listProc
-        command: [page.script, "instaladas"]
+        command: [page.script, "installed"]
         stdout: StdioCollector {
             onStreamFinished: {
-                page.fonts = page.rows(text, "fuente").map(r => (
+                page.fonts = page.rows(text, "font").map(r => (
                     { family: r[1], origin: r[2], pkg: r[3], files: +r[4], bytes: +r[5], dir: r[6], mono: r[7] === "1" }))
                     .sort((a, b) => a.family.localeCompare(b.family))
                 page.setDefaults(text)
@@ -67,7 +67,7 @@ SettingsPage {
         }
     }
     function setDefaults(text) {
-        const d = rows(text, "defecto")
+        const d = rows(text, "default")
         if (d.length) { defSans = d[0][1]; defMono = d[0][2] }
     }
     Process {
@@ -78,10 +78,10 @@ SettingsPage {
     Process { id: removeProc; onExited: { page.running = ""; page.load() } }
     Process {
         id: fileProc
-        command: [page.script, "instalar-archivo"]
+        command: [page.script, "install-file"]
         stdout: StdioCollector {
             onStreamFinished: {
-                const r = page.rows(text, "instaladas")
+                const r = page.rows(text, "installed")
                 if (r.length) { page.message = I18n.tr("%1 file(s) installed in ~/.local/share/fonts").arg(r[0][1]); page.load() }
             }
         }
@@ -97,7 +97,7 @@ SettingsPage {
         searched = text.trim()
         searchProc.running = false
         if (searched.length < 2) { results = []; return }
-        searchProc.command = [script, "buscar", searched]
+        searchProc.command = [script, "search", searched]
         searchProc.running = true
     }
     Timer { id: typing; interval: 250; onTriggered: page.search(pkgField.text) }
@@ -105,12 +105,12 @@ SettingsPage {
     function remove(f) {
         confirm = ""
         running = f.family
-        if (f.origin === "usuario") { removeProc.command = [script, "quitar-usuario", f.family]; removeProc.running = true }
+        if (f.origin === "user") { removeProc.command = [script, "remove-user", f.family]; removeProc.running = true }
         else Terminal.run(I18n.tr("Remove %1").arg(f.pkg), "sudo pacman -Rns " + f.pkg)
     }
     // System-wide default: text (sans-serif + GTK interface) or monospace
     function makeDefault(f) {
-        setDefault.command = [script, "predeterminada", f.family, f.mono ? "1" : "0", uiSize]
+        setDefault.command = [script, "set-default", f.family, f.mono ? "1" : "0", uiSize]
         setDefault.running = true
         message = (f.mono ? I18n.tr("«%1» is now the default monospace font (open apps pick it up when restarted)") : I18n.tr("«%1» is now the default text font (open apps pick it up when restarted)")).arg(f.family)
     }
@@ -191,7 +191,7 @@ SettingsPage {
                     IconButton {
                         visible: !fam.asking
                         danger: true
-                        enabled: fam.modelData.origin === "usuario" || fam.modelData.pkg !== ""
+                        enabled: fam.modelData.origin === "user" || fam.modelData.pkg !== ""
                         busy: page.running === fam.modelData.family
                         onClicked: page.confirm = fam.modelData.family
                     }
@@ -222,7 +222,7 @@ SettingsPage {
                 }
                 BarText {
                     visible: fam.asking
-                    text: fam.modelData.origin === "usuario" ? I18n.tr("Its files are deleted from your home folder")
+                    text: fam.modelData.origin === "user" ? I18n.tr("Its files are deleted from your home folder")
                         : I18n.tr("The package %1 is uninstalled (with all its families)").arg(fam.modelData.pkg)
                     color: Theme.fg; font.pixelSize: 11
                     wrapMode: Text.Wrap; Layout.fillWidth: true

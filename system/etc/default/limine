@@ -8,4 +8,4 @@ ROOT_SNAPSHOTS_PATH="/@/.snapshots"
 # /boot has 1 GiB and the UKI weighs ~170 MiB: old entries are removed above 85 %
 LIMIT_USAGE_PERCENT=85
 MAX_SNAPSHOT_ENTRIES=auto
-EXCLUDE_SNAPSHOT_ENTRIES="Windows*, Rescate*"
+EXCLUDE_SNAPSHOT_ENTRIES="Windows*, Rescue*, Rescate*"

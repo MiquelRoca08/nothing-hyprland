@@ -12,7 +12,7 @@ PRESETS=('default')
 default_uki="/boot/EFI/Linux/arch-linux.efi"
 # --no-cmdline: the command line always comes from limine.conf. With Secure Boot, a
 # UKI with an embedded cmdline ignores Limine's and the snapshots would boot the normal system.
-# --splash: the logo systemd-stub shows as soon as the UKI starts (scripts/logo-arranque.py);
+# --splash: the logo systemd-stub shows as soon as the UKI starts (scripts/boot-logo.py);
 # it stays until amdgpu changes the display mode (Plymouth is disabled: docs/SYSTEM.md).
 default_options="--splash /usr/local/share/nothing/splash.bmp --no-cmdline"
 

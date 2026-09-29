@@ -2,7 +2,7 @@
 // (yay, by popularity) and Flathub at once, and each result is installed in the floating terminal (when
 // done, Terminal.run notifies and the search is repeated to mark what is installed). Below, create a
 // WebApp or a TUI (with ~/.local/bin/webapp and tui, like the system menu). Data from
-// scripts/aplicaciones.sh.
+// scripts/apps.sh.
 import Quickshell
 import Quickshell.Io
 import QtQuick
@@ -13,14 +13,14 @@ SettingsPage {
     title: I18n.tr("Install apps")
     subtitle: I18n.tr("Repositories, AUR and Flathub; and WebApps and TUIs for the launcher")
 
-    readonly property string script: Quickshell.shellPath("scripts/aplicaciones.sh")
+    readonly property string script: Quickshell.shellPath("scripts/apps.sh")
     readonly property string bin: Quickshell.env("HOME") + "/.local/bin/"
     property string query: ""       // the last thing searched
     property string source: "all"
     property var results: ({ repos: [], aur: [], flatpak: [] })
     property string running: ""     // origin/name being installed
     property string made: ""        // notice after creating a WebApp or a TUI
-    property string tuiStyle: "flotante"
+    property string tuiStyle: "floating"
 
     readonly property var sources: [
         { k: "repos", label: I18n.tr("Repositories"), proc: reposProc },
@@ -35,7 +35,7 @@ SettingsPage {
         for (const s of sources) {
             s.proc.running = false
             if (!query) continue
-            s.proc.command = [script, "buscar-" + s.k, query]
+            s.proc.command = [script, "search-" + s.k, query]
             s.proc.running = true
         }
         if (!query) results = { repos: [], aur: [], flatpak: [] }
@@ -192,7 +192,7 @@ SettingsPage {
                 enabled: waName.text.trim() !== "" && waUrl.text.trim() !== ""
                 busy: waProc.running
                 onClicked: {
-                    waProc.command = [page.bin + "webapp", "crear", waName.text.trim(), waUrl.text.trim()].concat(waIcon.text.trim() ? [waIcon.text.trim()] : [])
+                    waProc.command = [page.bin + "webapp", "create", waName.text.trim(), waUrl.text.trim()].concat(waIcon.text.trim() ? [waIcon.text.trim()] : [])
                     waProc.running = true
                 }
             }
@@ -224,7 +224,7 @@ SettingsPage {
             spacing: 8
             ChoiceChips {
                 value: page.tuiStyle
-                options: [{ v: "flotante", label: I18n.tr("Floating") }, { v: "mosaico", label: I18n.tr("Tiled") }]
+                options: [{ v: "floating", label: I18n.tr("Floating") }, { v: "tiled", label: I18n.tr("Tiled") }]
                 onChosen: v => page.tuiStyle = v
             }
             WifiField { id: tuiIcon; Layout.fillWidth: true; placeholder: I18n.tr("Icon: URL or path (optional)") }
@@ -233,7 +233,7 @@ SettingsPage {
                 enabled: tuiName.text.trim() !== "" && tuiCmd.text.trim() !== ""
                 busy: tuiProc.running
                 onClicked: {
-                    tuiProc.command = [page.bin + "tui", "crear", tuiName.text.trim(), tuiCmd.text.trim(), page.tuiStyle].concat(tuiIcon.text.trim() ? [tuiIcon.text.trim()] : [])
+                    tuiProc.command = [page.bin + "tui", "create", tuiName.text.trim(), tuiCmd.text.trim(), page.tuiStyle].concat(tuiIcon.text.trim() ? [tuiIcon.text.trim()] : [])
                     tuiProc.running = true
                 }
             }

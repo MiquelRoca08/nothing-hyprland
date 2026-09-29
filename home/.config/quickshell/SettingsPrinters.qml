@@ -3,7 +3,7 @@
 // default (the user's, lpoptions), test page, resume if paused and remove;
 // the queue with «Cancel»; and add: search the network and USB (lpinfo) or by address, without
 // drivers (IPP Everywhere, lpadmin -m everywhere). What needs sudo goes to the terminal.
-// Data from scripts/impresoras.sh; the state refreshes every 5 s while the page is open.
+// Data from scripts/printers.sh; the state refreshes every 5 s while the page is open.
 import Quickshell
 import Quickshell.Io
 import QtQuick
@@ -14,7 +14,7 @@ SettingsPage {
     title: I18n.tr("Printers")
     subtitle: I18n.tr("Configured ones, print queue and adding new ones")
 
-    readonly property string script: Quickshell.shellPath("scripts/impresoras.sh")
+    readonly property string script: Quickshell.shellPath("scripts/printers.sh")
     property bool installed: true
     property bool active: true
     property bool ghostscript: true // CUPS filters need it: without it, nothing prints
@@ -42,25 +42,25 @@ SettingsPage {
 
     Process {
         id: stateProc
-        command: [page.script, "estado"]
+        command: [page.script, "status"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const c = page.rows(text, "cups")[0]
                 if (c) { page.installed = c[1] === "1"; page.active = c[2] === "1"; page.ghostscript = c[3] !== "0" }
-                page.printers = page.rows(text, "impresora").map(r => ({ name: r[1], state: r[2], isDefault: r[3] === "1", uri: r[4], detail: r.slice(5).join("|") }))
-                page.jobs = page.rows(text, "trabajo").map(r => ({ id: r[1], printer: r[2], user: r[3], bytes: +r[4], state: r[5], date: r.slice(6).join("|") }))
+                page.printers = page.rows(text, "printer").map(r => ({ name: r[1], state: r[2], isDefault: r[3] === "1", uri: r[4], detail: r.slice(5).join("|") }))
+                page.jobs = page.rows(text, "job").map(r => ({ id: r[1], printer: r[2], user: r[3], bytes: +r[4], state: r[5], date: r.slice(6).join("|") }))
                 page.loaded = true
             }
         }
     }
     Process {
         id: findProc
-        command: [page.script, "buscar"]
+        command: [page.script, "discover"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const a = page.rows(text, "avahi")[0]
                 page.avahi = !a || a[1] === "1"
-                page.found = page.rows(text, "dispositivo").map(r => ({ kind: r[1], uri: r[2], name: r[3], desc: r[4], ipUri: r[5] ?? "" }))
+                page.found = page.rows(text, "device").map(r => ({ kind: r[1], uri: r[2], name: r[3], desc: r[4], ipUri: r[5] ?? "" }))
                 page.searched = true
             }
         }
@@ -165,7 +165,7 @@ SettingsPage {
                     Button {
                         visible: !pr.modelData.isDefault && !pr.asking
                         kind: "ghost"; text: I18n.tr("Default")
-                        onClicked: page.act(["predeterminada", pr.modelData.name], I18n.tr("«%1» is the default").arg(pr.modelData.name))
+                        onClicked: page.act(["set-default", pr.modelData.name], I18n.tr("«%1» is the default").arg(pr.modelData.name))
                     }
                     Button {
                         visible: pr.modelData.state === "disabled" && !pr.asking
@@ -175,7 +175,7 @@ SettingsPage {
                     Button {
                         visible: pr.modelData.state !== "disabled" && !pr.asking
                         icon: "󰈙"; text: I18n.tr("Test")
-                        onClicked: page.act(["prueba", pr.modelData.name], I18n.tr("Test page sent to «%1»").arg(pr.modelData.name))
+                        onClicked: page.act(["test", pr.modelData.name], I18n.tr("Test page sent to «%1»").arg(pr.modelData.name))
                     }
                     Button { visible: pr.asking; kind: "ghost"; text: I18n.tr("Cancel"); onClicked: page.confirm = "" }
                     Button {
@@ -242,11 +242,11 @@ SettingsPage {
                 Button {
                     visible: job.modelData.state === "stopped" || job.modelData.state === "error" || job.modelData.state === "held"
                     icon: "󰑐"; text: I18n.tr("Retry")
-                    onClicked: page.act(["reintentar", job.modelData.id], I18n.tr("Job %1 sent again").arg(job.modelData.id))
+                    onClicked: page.act(["retry", job.modelData.id], I18n.tr("Job %1 sent again").arg(job.modelData.id))
                 }
                 Button {
                     icon: "󰅖"; text: I18n.tr("Cancel")
-                    onClicked: page.act(["cancelar", job.modelData.id], I18n.tr("Job %1 cancelled").arg(job.modelData.id))
+                    onClicked: page.act(["cancel", job.modelData.id], I18n.tr("Job %1 cancelled").arg(job.modelData.id))
                 }
             }
         }
