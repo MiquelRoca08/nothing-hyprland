@@ -41,7 +41,8 @@ Singleton {
 
     // Sections of the Settings window, as a tree (labels in English: shown through I18n.tr): categories (children) and pages (file). Pages
     // without their own file show SettingsSoon.qml with what is planned (soon).
-    // New section: add it here (the key k is the one in `qs ipc call settings open <k>`).
+    // New section: add it here (the key k is the one in `qs ipc call settings open <k>`). needs: the
+    // package without which the page is hidden (see installedNeeds).
     readonly property var settingsTree: [
         { k: "home", icon: "󰋜", label: "Home", file: "SettingsHome.qml" },
         { k: "system", icon: "󰍹", label: "System", children: [
@@ -56,8 +57,8 @@ Singleton {
         ] },
         { k: "connections", icon: "󰛳", label: "Connections", children: [
             { k: "wifi",      icon: "󰤨", label: "Wi-Fi",      file: "SettingsWifi.qml" },
-            { k: "bluetooth", icon: "󰂯", label: "Bluetooth",  file: "SettingsBluetooth.qml" },
-            { k: "printers",  icon: "󰐪", label: "Printers",   file: "SettingsPrinters.qml" },
+            { k: "bluetooth", icon: "󰂯", label: "Bluetooth",  file: "SettingsBluetooth.qml", needs: "bluez" },
+            { k: "printers",  icon: "󰐪", label: "Printers",   file: "SettingsPrinters.qml", needs: "cups" },
         ] },
         { k: "personalization", icon: "󰏘", label: "Personalization", children: [
             { k: "wallpaper", icon: "󰸉", label: "Wallpaper",         file: "SettingsWallpaper.qml" },
@@ -78,6 +79,36 @@ Singleton {
     ]
     // Old keys (IPC, walker menu) → the new ones
     readonly property var settingsAliases: ({ power: "battery", idle: "lock", appearance: "themes", todo: "home" })
+    // Which of the packages the pages need (needs) are installed: null until known (everything shown).
+    // Checked on start, when Settings opens and after its terminals (installing or removing packages;
+    // the installer's features module removes Bluetooth and CUPS, for example)
+    property var installedNeeds: null
+    function checkNeeds() { if (!needsProc.running) needsProc.running = true }
+    Process {
+        id: needsProc
+        running: true
+        command: ["sh", "-c", "pacman -Qq \"$@\" 2>/dev/null; true", "sh"].concat(
+            root.settingsTreeAll().filter(e => e.needs).map(e => e.needs))
+        stdout: StdioCollector { onStreamFinished: root.installedNeeds = text.split("\n").filter(l => l) }
+    }
+    Connections {
+        target: ShellState
+        function onSettingsOpenChanged() { if (ShellState.settingsOpen) root.checkNeeds() }
+        function onSettingsChanged() { root.checkNeeds() }
+    }
+    function settingsTreeAll() {
+        const out = []
+        const walk = list => { for (const e of list) { out.push(e); if (e.children) walk(e.children) } }
+        walk(settingsTree)
+        return out
+    }
+    // The tree without the pages whose package is missing (and without categories left empty)
+    readonly property var settingsVisible: {
+        const have = installedNeeds
+        const prune = list => list.map(e => e.children ? Object.assign({}, e, { children: prune(e.children) }) : e)
+            .filter(e => e.children ? e.children.length > 0 : !e.needs || have === null || have.includes(e.needs))
+        return prune(settingsTree)
+    }
     // Every entry, in order, with its level (0, 1, 2) and the chain of categories containing it
     readonly property var settingsFlat: {
         const out = []
@@ -87,7 +118,7 @@ Singleton {
                 if (e.children) walk(e.children, depth + 1, parents.concat([e.k]))
             }
         }
-        walk(settingsTree, 0, [])
+        walk(settingsVisible, 0, [])
         return out
     }
     // Page (leaf) for a key: its own, the first of a category, or Home

@@ -68,7 +68,8 @@ gets its Spanish in `i18n/es.js` (see «Language» in `docs/QUICKSHELL.md`).
   connection's DNS is here too (`dnsMode`, `dnsPresets`, `setDns(servers|null, all)`). The form
   text fields are `WifiField.qml`.
 - Settings sections: the `Config.settingsTree` tree (categories with `children` and pages with
-  `file`, or `soon` if not done yet); `Config.settingsFlat` flattens it with `depth` and `parents`,
+  `file`, or `soon` if not done yet; `needs: "<package>"` hides a page while that package is not
+  installed, and a category left empty disappears); `Config.settingsFlat` flattens it with `depth` and `parents`,
   and `Config.settingsEntry(key)` gives a key's page (the first of a category; old keys go through
   `settingsAliases`). **New section:** add it to the tree. `SettingsWindow.qml` (FloatingWindow):
   sidebar with collapsible categories (the current page's one is open; clicking a category

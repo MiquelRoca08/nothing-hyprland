@@ -47,7 +47,7 @@ networkmanager            # Wi-Fi (nmcli)
 bluez
 bluez-utils
 
-# Printing (Settings → Printers; it can also install it from there)
+# Printing (Settings → Printers, only shown with cups installed; the features module can leave it out)
 cups
 cups-filters
 ghostscript               # used by the CUPS filters (without it: «gstoraster filter failed»)

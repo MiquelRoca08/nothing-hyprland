@@ -175,9 +175,13 @@ system's age (from the first line of `/var/log/pacman.log`, or the creation date
   disconnecting (`nmcli connection modify` + `nmcli device reapply`), optionally to every saved
   network. All the network logic is in `NetworkService.qml`, shared by the bar, the panel and
   Settings.
+- **Bluetooth and Printers only show if their package is installed** (`bluez`, `cups`: the `needs`
+  field of `Config.settingsTree`, checked with `pacman -Qq` on start, when Settings opens and after
+  its terminals). Install them with `./install.sh features` + `packages`, or `sudo pacman -S bluez
+  bluez-utils` / `cups cups-filters ghostscript avahi nss-mdns`.
 - **Bluetooth:** on/off, scan, pair, connect, forget.
-- **Printers** (CUPS): installs `cups cups-filters ghostscript avahi nss-mdns` if missing (without
-  Ghostscript nothing prints: "gstoraster filter failed") and enables the services. Printers with
+- **Printers** (CUPS): installs whatever of `cups-filters ghostscript avahi nss-mdns` is missing
+  (without Ghostscript nothing prints: "gstoraster filter failed") and enables the services. Printers with
   their state, default (per user), test page, resume and remove; the queue with each job's state,
   retry and cancel. Adding: network discovery with avahi (added as
   `dnssd://<name>._ipp._tcp.local/`, which survives IP changes, or by IP if `.local` does not

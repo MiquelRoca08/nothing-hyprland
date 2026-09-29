@@ -85,6 +85,9 @@ comes back or a decision needs its background. Dates are from September 2026.
   `/etc/locale.conf` (`scripts/locale.sh`, with `localectl`), and the shell and the scripts read it
   from that file, so they change at once. The Settings window title is now «Settings» (was
   «Ajustes», matched by `conf/rules.lua`).
+- **Bluetooth and Printers hidden when not installed.** Settings pages can say which package they
+  need (`needs` in `Config.settingsTree`: `bluez`, `cups`); `Config` checks them with `pacman -Qq`
+  and the sidebar, search and `qs ipc call settings open` use the filtered tree.
 - **Bar aligned with Settings and the menu.** Clickable modules get a hover background
   (`BarHover.qml`, like `IconButton`); the active workspace, the power menu's hover and the share
   picker's selection and main button are red (`Theme.sel`) instead of white (`Theme.accent`, which
