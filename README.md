@@ -80,7 +80,7 @@ at the end. Every module only does what is missing, so it is safe to run again a
 | `packages` | `pacman -Syu --needed` with [`packages.txt`](packages.txt) (also updates the system); lists every package with its size and the total first |
 | `aur` | `yay -S --needed` with [`packages-aur.txt`](packages-aur.txt); builds yay first if missing |
 | `services` | Enables NetworkManager, bluetooth, power-profiles-daemon, cups and avahi; adds you to the `i2c` group |
-| `links` | Symlinks the paths in [`links.txt`](links.txt) from `home/` (or `private/home/`) into `$HOME`; existing files are backed up as `.bak-<date>`; removes links left by renamed files |
+| `links` | Symlinks the paths in [`links.txt`](links.txt) from `home/` (or `private/home/`) into `$HOME`; existing files are backed up as `.bak-<date>`; removes links left by renamed files. Before replacing an existing `~/.config/hypr` it keeps its monitors and autostart apps (see [below](#your-previous-hyprland-config)) |
 | `appearance` | Bash prompt, theme colors, fallback cursor, gsettings, walker/elephant user services and `xdph.conf` |
 | `system` | Copies the changed files of `system/` to `/`, filling the templates with this machine's data |
 | `boot` | Kernel options in `/boot/limine.conf`, Plymouth masked, `mkinitcpio -P` when needed |
@@ -94,14 +94,36 @@ A new module is a file `installer/NN-name.sh` with `TITLE`, `DESCRIPTION` and a 
 that runs each action through `step "what it does" command…` (`installer/lib.sh`); its texts go
 through `t "English text"`, with the Spanish in `home/.config/quickshell/i18n/es.js`.
 
+### Your previous Hyprland config
+
+The `links` module replaces `~/.config/hypr` with the repo's modular Lua config (the old folder is
+kept as `~/.config/hypr.bak-<date>`). It does not merge the rest of your old config, but before
+replacing it, it keeps two things, written to files that are yours and not in git
+([`installer/hypr-import.py`](installer/hypr-import.py)):
+
+- **Monitors → `conf/monitors.lua`.** The `monitor =` / `monitorv2` rules of a `hyprland.conf`
+  (following `source =`) or the `hl.monitor` rules of a Lua config. If there are none, the monitors as
+  the running Hyprland session has them. A fallback rule for any other monitor (preferred mode,
+  automatic position and scale) is always added. Settings → Displays rewrites this file later.
+- **Autostart apps → `conf/autostart-local.lua`.** The `exec-once` / `exec` commands (or
+  `hl.exec_cmd` calls), as a list that `conf/autostart.lua` runs on start. What this desktop already
+  does (bar, notifications, wallpaper, idle, lock, launcher, clipboard…) is written commented out,
+  with the reason, so two bars or two notification daemons do not fight. Rules such as
+  `[workspace 2 silent]` are dropped (noted in a comment).
+
+Without a previous config, `conf/monitors.lua` is still created (from the running session or with
+the fallback rule only). Both files are only written if they do not exist yet: edit them freely.
+
 ## First steps after installing
 
 1. **Reboot.** greetd logs you in and the lock screen appears at once: unlock with your password.
    If the `i2c` group was added, this also applies it.
 2. **Keybinds:** `SUPER+K` lists them all, `SUPER+SPACE` opens the system menu, `SUPER+I` opens
    Settings. The main ones are in [docs/HYPRLAND.md](docs/HYPRLAND.md#keybinds).
-3. **Displays:** the shipped `conf/monitors.lua` is the reference laptop's. Open Settings → System →
-   Displays, arrange your monitors, pick resolution and scale, and Apply (you get 15 s to Keep).
+3. **Displays:** the `links` module created `conf/monitors.lua` for your machine (from your previous
+   Hyprland config, the running session or, failing both, every monitor at its preferred mode). Fine-tune
+   it in Settings → System → Displays: arrange your monitors, pick resolution and scale, and Apply
+   (you get 15 s to Keep).
 4. **Look:** Settings → Personalization → Wallpaper and Themes; Settings → System → Language.
 5. **Hardware check:** read [docs/HARDWARE.md](docs/HARDWARE.md) and remove what does not apply
    (e.g. `asusctl`/`rog-control-center`, the G14 audio patch, autostarted apps in

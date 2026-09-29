@@ -14,14 +14,14 @@ CS35L56 amplifiers, and an IR camera. Look up your own with `lspci -k`, `hyprctl
 
 | What | Where | On other machines |
 |---|---|---|
-| Monitor names, modes, scales | `home/.config/hypr/conf/monitors.lua` | Ships with `eDP-1` (2880×1800 @ 120, scale 1.8) and `DP-9` (2560×1440 @ 180 on the NVIDIA GPU). Hyprland ignores entries for outputs you do not have; set yours from Settings → Displays or by hand (`hyprctl monitors all`) |
+| Monitor names, modes, scales | `home/.config/hypr/conf/monitors.lua` (not in git) | Created per machine by `./install.sh links` (your previous config, the running session or a fallback rule). On the reference laptop: `eDP-1` (2880×1800 @ 120, scale 1.8) and `DP-9` (2560×1440 @ 180 on the NVIDIA GPU). Adjust it in Settings → Displays |
 | "Laptop screen" toggle in the menu | `~/.local/bin/menu` (`laptop-screen`) | Toggles `eDP-1`; change the name if your panel is different |
 | ASUS tools | `packages.txt` (`asusctl`, `rog-control-center`), `conf/autostart.lua` | Remove both lines and the autostart entry on non-ASUS machines. Settings → Battery's charge limit uses `asusctl` |
 | G14 audio patch | `system/etc/modprobe.d/g14-audio.conf`, `system/usr/lib/firmware/g14-audio.fw` | The patch only matches this codec's IDs, so it is inert elsewhere, but you can delete both files |
 | Howdy camera | `system/etc/howdy/config.ini` (`device_path`) | A `/dev/v4l/by-path/…` path of this laptop's IR camera: set yours (`ls /dev/v4l/by-path/`) |
 | Limine background | `system/boot/EFI/BOOT/limine-nothing.png` | Drawn for 2880×1800; stretched at other resolutions |
 | Personal input rules | `conf/input.lua` | A Logitech M705 rule (flat acceleration, slower scroll) and a CS2 scroll rule; harmless without those devices/apps |
-| Autostarted apps | `conf/autostart.lua` | `steam`, `rog-control-center` and `discord`: remove what you do not use |
+| Autostarted apps | `conf/autostart.lua` | `steam`, `rog-control-center` and `discord`: remove what you do not use. Your own go in `conf/autostart-local.lua` (not in git) |
 | GPU drivers | not in `packages.txt` | Install your GPU's drivers yourself (e.g. `nvidia-open` + `nvidia-utils`) |
 
 ## Hybrid graphics (AMD iGPU + NVIDIA dGPU)

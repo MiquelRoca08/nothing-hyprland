@@ -3,7 +3,11 @@
 -- Each require() runs in its own scope: if one module fails,
 -- the others still load. Everything that is loaded is in this list.
 
-require("conf.monitors")
+-- Monitors: yours, not in git (install.sh creates conf/monitors.lua from this machine; Settings →
+-- Displays rewrites it). Without it, every monitor with its preferred mode, automatic position and scale
+if not pcall(require, "conf.monitors") then
+    hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "auto" })
+end
 require("conf.env")
 require("conf.autostart")
 require("conf.permissions")

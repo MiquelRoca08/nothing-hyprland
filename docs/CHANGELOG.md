@@ -70,6 +70,12 @@ comes back or a decision needs its background. Dates are from September 2026.
   the current client), `-forcedesktopscaling` (integers only), per-monitor scaling at launch or an
   automatic restart when moving monitors (worked, but the simple option won).
 - `SUPER+SHIFT+S` changed from "move to special workspace" to region capture.
+- **Per-machine monitors and own autostart apps.** `conf/monitors.lua` left git (it had the
+  reference laptop's `eDP-1`/`DP-9`): the `links` module creates it on each machine from the previous
+  Hyprland config (`monitor=`, `monitorv2`, `hl.monitor`), the running session or a fallback rule,
+  and `hyprland.lua` falls back to "preferred, auto, auto" without it. The previous config's
+  `exec-once`/`exec` commands go to `conf/autostart-local.lua` (not in git), run by `autostart.lua`;
+  what this desktop already provides is written commented out. Both by `installer/hypr-import.py`.
 
 ## Launcher and menu (walker)
 

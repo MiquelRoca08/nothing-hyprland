@@ -81,7 +81,7 @@ un resumen. Cada módulo solo hace lo que falta, así que se puede repetir tras 
 | `packages` | `pacman -Syu --needed` con [`packages.txt`](packages.txt) (de paso actualiza el sistema); antes lista cada paquete con lo que ocupa y el total |
 | `aur` | `yay -S --needed` con [`packages-aur.txt`](packages-aur.txt); si no hay yay, lo compila antes |
 | `services` | Activa NetworkManager, bluetooth, power-profiles-daemon, cups y avahi; te añade al grupo `i2c` |
-| `links` | Enlaza en `$HOME` las rutas de [`links.txt`](links.txt) desde `home/` (o `private/home/`); lo que ya exista se guarda como `.bak-<fecha>`; quita los enlaces que dejaron archivos renombrados |
+| `links` | Enlaza en `$HOME` las rutas de [`links.txt`](links.txt) desde `home/` (o `private/home/`); lo que ya exista se guarda como `.bak-<fecha>`; quita los enlaces que dejaron archivos renombrados. Antes de sustituir un `~/.config/hypr` que ya exista, conserva sus monitores y apps de inicio (ver [más abajo](#tu-configuración-anterior-de-hyprland)) |
 | `appearance` | Prompt de bash, colores del tema, cursor de respaldo, gsettings, servicios de walker/elephant y `xdph.conf` |
 | `system` | Copia a `/` los archivos de `system/` que han cambiado, rellenando las plantillas con los datos de este equipo |
 | `boot` | Opciones del kernel en `/boot/limine.conf`, Plymouth enmascarado y `mkinitcpio -P` si hace falta |
@@ -95,15 +95,37 @@ Un módulo nuevo es un archivo `installer/NN-nombre.sh` con `TITLE`, `DESCRIPTIO
 `module()` que hace cada acción con `step "qué hace" comando…` (`installer/lib.sh`); sus textos
 pasan por `t "texto en inglés"`, con el español en `home/.config/quickshell/i18n/es.js`.
 
+### Tu configuración anterior de Hyprland
+
+El módulo `links` sustituye `~/.config/hypr` por la configuración modular en Lua del repo (la carpeta
+antigua se guarda como `~/.config/hypr.bak-<fecha>`). No fusiona el resto de tu configuración antigua,
+pero antes de sustituirla conserva dos cosas, en archivos que son tuyos y no van a git
+([`installer/hypr-import.py`](installer/hypr-import.py)):
+
+- **Monitores → `conf/monitors.lua`.** Las reglas `monitor =` / `monitorv2` de un `hyprland.conf`
+  (siguiendo los `source =`) o las `hl.monitor` de una configuración en Lua. Si no hay ninguna, los
+  monitores tal y como los tiene la sesión de Hyprland en marcha. Siempre se añade una regla de
+  respaldo para cualquier otro monitor (modo preferido, posición y escala automáticas). Después,
+  Ajustes → Pantallas reescribe este archivo.
+- **Apps de inicio → `conf/autostart-local.lua`.** Los comandos `exec-once` / `exec` (o las llamadas
+  a `hl.exec_cmd`), como una lista que `conf/autostart.lua` ejecuta al arrancar. Lo que este escritorio
+  ya hace (barra, notificaciones, fondo, inactividad, bloqueo, lanzador, portapapeles…) se escribe
+  comentado, con el motivo, para que no haya dos barras ni dos demonios de notificaciones. Las reglas
+  como `[workspace 2 silent]` se descartan (se indica en un comentario).
+
+Sin configuración anterior, `conf/monitors.lua` se crea igualmente (de la sesión en marcha o solo con
+la regla de respaldo). Los dos archivos solo se escriben si aún no existen: edítalos a tu gusto.
+
 ## Primeros pasos después de instalar
 
 1. **Reinicia.** greetd inicia la sesión y aparece enseguida la pantalla de bloqueo: desbloquea con
    tu contraseña. Si se añadió el grupo `i2c`, así se aplica.
 2. **Atajos:** `SUPER+K` los lista todos, `SUPER+SPACE` abre el menú del sistema y `SUPER+I`,
    Ajustes. Los principales están en [docs/HYPRLAND.md](docs/HYPRLAND.md#keybinds).
-3. **Pantallas:** el `conf/monitors.lua` que viene es el del portátil de referencia. Abre Ajustes →
-   Sistema → Pantallas, coloca tus monitores, elige resolución y escala y pulsa Aplicar (tienes 15 s
-   para Mantener).
+3. **Pantallas:** el módulo `links` ha creado `conf/monitors.lua` para tu equipo (a partir de tu
+   configuración anterior de Hyprland, de la sesión en marcha o, si no hay ninguna, cada monitor en su
+   modo preferido). Ajústalo en Ajustes → Sistema → Pantallas: coloca tus monitores, elige resolución y
+   escala y pulsa Aplicar (tienes 15 s para Mantener).
 4. **Aspecto:** Ajustes → Personalización → Fondo de pantalla y Temas; Ajustes → Sistema → Idioma.
 5. **Revisa el hardware:** lee [docs/HARDWARE.md](docs/HARDWARE.md) y quita lo que no te sirva
    (p. ej. `asusctl`/`rog-control-center`, el parche de audio del G14 o las apps que arrancan en

@@ -71,7 +71,7 @@ checkout (e.g. `~/dotfiles`; find it with `readlink -f ~/.config/hypr`, which po
 | `hypr/conf/shell-settings.lua`, `hypr/hypridle.conf` | Quickshell (`Config.qml`, from `settings.json`) on every start | The option in `Config.qml` / the Settings page |
 | `hypr/conf/theme.lua`, `gtk-{3,4}.0/theme.css`, `walker/themes/nothing/theme.css`, `~/.local/share/quickshell/theme/*` (`current.json`, `alacritty.toml`) | `quickshell/scripts/theme.sh apply` | The theme (`quickshell/themes/*.json`, `~/.local/share/quickshell/themes/`) or `theme.sh` |
 | `hypr/xdph.conf` | the `appearance` module, from `xdph.conf.template` | The template |
-| `hypr/conf/monitors.lua` | Settings → Displays (only the `hl.monitor` blocks of connected monitors) | Can be edited by hand, but anything that is not `hl.monitor` is lost when applying from Settings |
+| `hypr/conf/monitors.lua` (per machine, not in git) | `./install.sh links` (`installer/hypr-import.py`) at first, then Settings → Displays (only the `hl.monitor` blocks of connected monitors) | Can be edited by hand, but anything that is not `hl.monitor` is lost when applying from Settings |
 | `/boot/limine.conf` | limine-snapper-sync (adds the snapshots) | See above |
 | Boot images (`splash.bmp`, Plymouth `logo.png`) | `scripts/boot-logo.py` | The script |
 
