@@ -1,0 +1,11 @@
+#!/bin/sh
+# After a git pull (post-merge; post-rewrite for pull --rebase): if it changed the Hyprland config,
+# reload Hyprland. git replaces files by deleting and rewriting them, and Hyprland's own reload on
+# save can run in between: it finds no hyprland.lua, falls into emergency mode (no keybinds) and does
+# not reload again by itself. Enabled by install.sh (links module): git config core.hooksPath .githooks
+[ -n "$HYPRLAND_INSTANCE_SIGNATURE" ] && command -v hyprctl >/dev/null || exit 0
+if git rev-parse -q --verify ORIG_HEAD >/dev/null; then
+    git diff --quiet ORIG_HEAD HEAD -- home/.config/hypr && exit 0
+fi
+hyprctl reload >/dev/null && echo "hyprctl reload (the pull changed home/.config/hypr)"
+exit 0

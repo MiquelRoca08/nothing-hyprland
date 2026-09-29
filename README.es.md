@@ -81,7 +81,7 @@ un resumen. Cada módulo solo hace lo que falta, así que se puede repetir tras 
 | `packages` | `pacman -Syu --needed` con [`packages.txt`](packages.txt) (de paso actualiza el sistema); antes lista cada paquete con lo que ocupa y el total |
 | `aur` | `yay -S --needed` con [`packages-aur.txt`](packages-aur.txt); si no hay yay, lo compila antes |
 | `services` | Activa NetworkManager, bluetooth, power-profiles-daemon, cups y avahi; te añade al grupo `i2c` |
-| `links` | Enlaza en `$HOME` las rutas de [`links.txt`](links.txt) desde `home/` (o `private/home/`); lo que ya exista se guarda como `.bak-<fecha>`; quita los enlaces que dejaron archivos renombrados. Antes de sustituir un `~/.config/hypr` que ya exista, conserva sus monitores y apps de inicio (ver [más abajo](#tu-configuración-anterior-de-hyprland)) |
+| `links` | Enlaza en `$HOME` las rutas de [`links.txt`](links.txt) desde `home/` (o `private/home/`); lo que ya exista se guarda como `.bak-<fecha>`; quita los enlaces que dejaron archivos renombrados. Antes de sustituir un `~/.config/hypr` que ya exista, conserva sus monitores y apps de inicio (ver [más abajo](#tu-configuración-anterior-de-hyprland)); activa los hooks de git del repo (`.githooks/`: recargan Hyprland tras un `git pull` que cambie su configuración) |
 | `appearance` | Prompt de bash, colores del tema, cursor de respaldo, gsettings, servicios de walker/elephant y `xdph.conf` |
 | `system` | Copia a `/` los archivos de `system/` que han cambiado, rellenando las plantillas con los datos de este equipo |
 | `boot` | Opciones del kernel en `/boot/limine.conf`, Plymouth enmascarado y `mkinitcpio -P` si hace falta |

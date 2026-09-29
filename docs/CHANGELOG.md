@@ -76,6 +76,10 @@ comes back or a decision needs its background. Dates are from September 2026.
   and `hyprland.lua` falls back to "preferred, auto, auto" without it. The previous config's
   `exec-once`/`exec` commands go to `conf/autostart-local.lua` (not in git), run by `autostart.lua`;
   what this desktop already provides is written commented out. Both by `installer/hypr-import.py`.
+- **Emergency mode after `git pull`.** Hyprland's reload on save ran while git was rewriting
+  `hyprland.lua` («cannot open …/hyprland.lua», no keybinds) and did not reload again. The repo's
+  `.githooks/post-merge` (and `post-rewrite`) now run `hyprctl reload` when a pull changes
+  `home/.config/hypr`; the `links` module enables them (`core.hooksPath`).
 
 ## Launcher and menu (walker)
 

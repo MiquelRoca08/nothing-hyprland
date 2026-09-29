@@ -97,5 +97,11 @@ module() {
             warn "$(t "python is missing (packages module): conf/monitors.lua is not created; Hyprland uses every monitor's preferred mode")"
         fi
     fi
+    # The repo's git hooks (.githooks/): reload Hyprland after a git pull that changes its config
+    if [ "$(git -C "$DOT" config core.hooksPath)" != .githooks ]; then
+        step "$(t "Reload Hyprland after each git pull that changes its config (the repo's git hooks)")" \
+            git -C "$DOT" config core.hooksPath .githooks
+        did=1
+    fi
     [ -n "$did" ] || nothing_to_do "$(t "all the links are fine")"
 }
