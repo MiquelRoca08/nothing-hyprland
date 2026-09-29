@@ -85,6 +85,8 @@ comes back or a decision needs its background. Dates are from September 2026.
   `/etc/locale.conf` (`scripts/locale.sh`, with `localectl`), and the shell and the scripts read it
   from that file, so they change at once. The Settings window title is now «Settings» (was
   «Ajustes», matched by `conf/rules.lua`).
+- **Menu entries hidden when their program is missing:** Record, Text (OCR), Flatpak and Firmware
+  (`REQUIRES` in `menu`); the keybinds that still reach them notify instead of failing silently.
 - **Bluetooth and Printers hidden when not installed.** Settings pages can say which package they
   need (`needs` in `Config.settingsTree`: `bluez`, `cups`); `Config` checks them with `pacman -Qq`
   and the sidebar, search and `qs ipc call settings open` use the filtered tree.

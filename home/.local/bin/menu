@@ -70,6 +70,27 @@ System|󰐥|Power off|poweroff
 END
 )
 
+# Entries that need a program (target → command): without it they are left out of the menu, its
+# search and Settings → Menu (the installer's features module can remove these programs). The
+# entries of a submenu left out go with it; opening it directly (menu record) just says so.
+declare -A REQUIRES=(
+    [screenshot-text]=tesseract
+    [">Actions/Record"]=gpu-screen-recorder [record]=gpu-screen-recorder
+    [record-audio]=gpu-screen-recorder [record-mic]=gpu-screen-recorder
+    [install-flatpak]=flatpak [remove-flatpak]=flatpak
+    [firmware]=fwupdmgr
+)
+declare -A UNAVAILABLE=()   # submenu path → the missing program
+for d in "${!REQUIRES[@]}"; do
+    [[ $d == \>* ]] && ! command -v "${REQUIRES[$d]}" >/dev/null && UNAVAILABLE[${d#>}]=${REQUIRES[$d]}
+done
+ENTRIES=$(while IFS='|' read -r r i x d; do
+    need=${REQUIRES[$d]:-}
+    [[ -n $need ]] && ! command -v "$need" >/dev/null && continue
+    [[ -n $r && -n ${UNAVAILABLE[$r]:-} ]] && continue
+    printf '%s|%s|%s|%s\n' "$r" "$i" "$x" "$d"
+done <<<"$ENTRIES")
+
 # Customization (Settings → Personalization → QuickShell → Menu, in settings.json): hidden entries
 # and sections («Section» or «Section/Entry»; hiding a section hides everything inside it,
 # search included), the order of the main menu sections and custom entries
@@ -173,6 +194,10 @@ go_back() {
 
 show() {
     local path=$1 chosen text target
+    if [[ -n ${UNAVAILABLE[$path]:-} ]]; then
+        notify "$(t "%s is not installed" "${UNAVAILABLE[$path]}")" "$(t "Install it with ./install.sh features and packages")"
+        exit 0
+    fi
     # If already recording, the «Record» entry stops it
     if [[ $path == Actions/Record ]] && record --stop; then exit 0; fi
     chosen=$(menu "$(t "${path##*/}")" "$(options_of "$path")")

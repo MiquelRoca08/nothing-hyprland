@@ -60,6 +60,10 @@ region)
         done <<<"$RECTS"
     fi ;;
 text)
+    if ! command -v tesseract >/dev/null; then
+        notify-send -u low "$(t "%s is not installed" tesseract)" "$(t "Install it with ./install.sh features and packages")"
+        exit 1
+    fi
     freeze
     SEL=$(slurp 2>/dev/null)
     [[ -n $SEL ]] || exit 0

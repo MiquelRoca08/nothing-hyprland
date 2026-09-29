@@ -74,6 +74,11 @@ Nothing palette and `theme.css` the active theme's, with every token of `Theme.q
 - **Commands:** `menu <path>` opens a submenu directly (e.g. `menu actions`, `menu screenshot`,
   `menu system`; Escape closes); `menu run <id>` runs an entry; `menu --from-main <path>` opens a
   submenu from the main menu (Escape goes back to it).
+- **Entries that need a program** (`REQUIRES` in `menu`) are left out when it is missing: Record
+  (`gpu-screen-recorder`, the whole submenu), Text (OCR) (`tesseract`), Install/Remove → Flatpak
+  (`flatpak`) and Update → Firmware (`fwupdmgr`), everywhere: submenus, search and Settings → Menu.
+  Opening a missing submenu directly (`menu record`, `ALT+Print`) and the `record` /
+  `screenshot text` keybinds show a notification instead.
 - **Customizable** from Settings → Personalization → QuickShell → Menu: hidden entries, section
   order and custom entries (icon, name, command, section), saved in `settings.json` (`menuHidden`,
   `menuOrder`, `menuCustom`) and read with `jq` each time the menu opens. The English paths are the
