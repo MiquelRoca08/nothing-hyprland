@@ -4,7 +4,14 @@
 -- entry goes back to the dot grid.
 Name = "wallpapers"
 NamePretty = "Wallpapers"
-Cache = false
+-- Cached: listed again only when the folder or the language (i18n/es.js, /etc/locale.conf)
+-- changes, not on every keystroke (see system.lua). Folders, not files: renames drop file watches
+Cache = true
+RefreshOnChange = {
+  os.getenv("HOME") .. "/Pictures/Wallpapers",
+  os.getenv("HOME") .. "/.config/quickshell/i18n",
+  "/etc",
+}
 HideFromProviderlist = true
 SearchName = true
 

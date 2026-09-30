@@ -71,6 +71,14 @@ Nothing palette and `theme.css` the active theme's, with every token of `Theme.q
   `.lua` menus read it through `menu --entries` (translated); `menu --all-entries` prints it in
   English without hiding anything (used by Settings → Menu). To add an entry: a line in `ENTRIES`,
   its case in `run`, and its Spanish in `~/.config/quickshell/i18n/es.js`.
+- **Cached menus:** the `.lua` menus (`system`, `systemsearch`, `wallpapers`) use `Cache = true`
+  with `RefreshOnChange`: elephant runs `GetEntries` again only when a watched **folder** changes
+  (the script's real folder in the repo, `~/.config/quickshell` for `settings.json`, `i18n/`,
+  `/etc` for `locale.conf`, `/var/lib/pacman/local` for installed programs, `~/Pictures/Wallpapers`).
+  With `Cache = false` elephant calls `GetEntries` on **every keystroke**. Folders, not files: a file
+  watch is lost after the first atomic save (rename), so later changes would not show.
+- **`menu --entries` must stay cheap** (~30 ms): no `$(…)` per entry (translations read `I18N`
+  directly, one `jq` for the three `settings.json` lists).
 - **Commands:** `menu <path>` opens a submenu directly (e.g. `menu actions`, `menu screenshot`,
   `menu system`; Escape closes); `menu run <id>` runs an entry; `menu --from-main <path>` opens a
   submenu from the main menu (Escape goes back to it).
@@ -81,8 +89,8 @@ Nothing palette and `theme.css` the active theme's, with every token of `Theme.q
   `screenshot text` keybinds show a notification instead.
 - **Customizable** from Settings → Personalization → QuickShell → Menu: hidden entries, section
   order and custom entries (icon, name, command, section), saved in `settings.json` (`menuHidden`,
-  `menuOrder`, `menuCustom`) and read with `jq` each time the menu opens. The English paths are the
-  identifiers.
+  `menuOrder`, `menuCustom`) and read with `jq` by `menu` (the cached menus refresh when it
+  changes). The English paths are the identifiers.
 - **Submenus** are walker in `--dmenu` mode, without a search field. **Backspace goes back** like
   Escape: while a menu is open, `menu` switches Hyprland to the `menu` submap, where Backspace runs
   `menu-back`; it returns to `reset` when the menu closes. (Backspace cannot go in walker's own
@@ -125,6 +133,8 @@ Web app and TUI launchers made by older versions of these scripts still work.
 - walker windows **grab the keyboard**: a test window opened while someone types steals the text.
 - Opening walker right after closing another (≈0.5 s) sometimes does not show it; `menu --from-main`
   waits 0.3 s.
+- A Lua menu **does not keep its globals** between calls: caching in a Lua variable does nothing;
+  use `Cache = true` + `RefreshOnChange`.
 - `pkill -f <text>` also kills the command that contains that text: close windows by PID
   (`hyprctl clients -j`).
 

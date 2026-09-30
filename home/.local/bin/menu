@@ -14,8 +14,10 @@
 # are also the identifiers of hidden entries and of the order in settings.json; they are shown in the
 # interface language (t, ~/.config/quickshell/i18n/i18n.sh).
 
-source "$HOME/.config/quickshell/i18n/i18n.sh" 2>/dev/null ||
+source "$HOME/.config/quickshell/i18n/i18n.sh" 2>/dev/null || {
+    declare -A I18N=()
     t() { local s=$1; shift; if (($#)); then printf -- "$s" "$@"; else printf '%s' "$s"; fi; }
+}
 
 # path|icon|text|target — a «>Path» target opens that submenu; otherwise it is an id for «run»
 ENTRIES=$(cat <<'END'
@@ -99,11 +101,12 @@ SETTINGS="$HOME/.config/quickshell/settings.json"
 ALL=$ENTRIES
 if command -v jq >/dev/null && [[ -f $SETTINGS ]]; then
     # (.ruta/.icono/.texto: field names before the move to English, until the shell migrates them)
-    custom=$(jq -r '(.menuCustom // []) | to_entries[] | (.value.text // .value.texto) as $t | select($t != null and $t != "")
-        | "\(.value.path // .value.ruta // "")|\(.value.icon // .value.icono // "󰘳")|\($t | gsub("[|]"; "/"))|custom:\(.key)"' "$SETTINGS" 2>/dev/null)
+    # One jq for the three lists (each jq costs ~5 ms), separated by NUL
+    { IFS= read -r -d '' custom; IFS= read -r -d '' hidden; IFS= read -r -d '' order; } < <(jq -j '
+        ([(.menuCustom // []) | to_entries[] | (.value.text // .value.texto) as $t | select($t != null and $t != "")
+         | "\(.value.path // .value.ruta // "")|\(.value.icon // .value.icono // "󰘳")|\($t | gsub("[|]"; "/"))|custom:\(.key)"] | join("\n")),
+        "\u0000", ((.menuHidden // []) | join("\n")), "\u0000", ((.menuOrder // []) | join("\n")), "\u0000"' "$SETTINGS" 2>/dev/null)
     [[ -n $custom ]] && ALL+=$'\n'"$custom"
-    hidden=$(jq -r '(.menuHidden // [])[]' "$SETTINGS" 2>/dev/null)
-    order=$(jq -r '(.menuOrder // [])[]' "$SETTINGS" 2>/dev/null)
     ENTRIES=$(awk -F'|' -v hid="$hidden" -v ord="$order" '
         BEGIN { n = split(hid, o, "\n"); for (i = 1; i <= n; i++) if (o[i] != "") h[o[i]] = 1
                 m = split(ord, r, "\n"); for (i = 1; i <= m; i++) if (r[i] != "") pos[r[i]] = i }
@@ -120,14 +123,16 @@ if command -v jq >/dev/null && [[ -f $SETTINGS ]]; then
             for (i = 1; i <= q; i++) print rest[i] }' <<<"$ALL")
 fi
 
-# Column 5: the text in the interface language (what walker shows and returns)
-ENTRIES=$(while IFS='|' read -r r i x d; do printf '%s|%s|%s|%s|%s\n' "$r" "$i" "$x" "$d" "$(t "$x")"; done <<<"$ENTRIES")
+# Column 5: the text in the interface language (what walker shows and returns). The I18N table
+# is read directly, not through $(t …): one subshell per entry made «menu --entries», which the
+# elephant menus run on every keystroke, take ~135 ms
+ENTRIES=$(while IFS='|' read -r r i x d; do printf '%s|%s|%s|%s|%s\n' "$r" "$i" "$x" "$d" "${I18N[$x]:-$x}"; done <<<"$ENTRIES")
 
-# A path in the interface language (Actions/Screenshot → Acciones/Captura)
+# A path in the interface language (Actions/Screenshot → Acciones/Captura), into $view
 path_view() {
     local IFS=/ p out=()
-    for p in $1; do out+=("$(t "$p")"); done
-    echo "${out[*]}"
+    for p in $1; do out+=("${I18N[$p]:-$p}"); done
+    view="${out[*]}"
 }
 
 BACK_EXITS=false # true when entering a submenu directly (from a bind)
@@ -281,7 +286,7 @@ path_of() {
 
 case ${1:-} in
 --entries)
-    while IFS='|' read -r r i x d v; do printf '%s|%s|%s|%s\n' "$(path_view "$r")" "$i" "$v" "$d"; done <<<"$ENTRIES"
+    while IFS='|' read -r r i x d v; do path_view "$r"; printf '%s|%s|%s|%s\n' "$view" "$i" "$v" "$d"; done <<<"$ENTRIES"
     exit 0 ;;
 --all-entries) echo "$ALL"; exit 0 ;;
 run) run "$2"; exit ;;

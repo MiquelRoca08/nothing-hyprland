@@ -138,6 +138,12 @@ comes back or a decision needs its background. Dates are from September 2026.
   which Pango can treat as the default size) and the main menu gets 6 px of slack (at scale 1.8
   rows could end up taller and clip the last section).
 - **27 Sep — Menu editable from Settings** (hidden entries, order, custom entries).
+- **30 Sep — Slow main menu.** Opening it and every keystroke waited ~150 ms: `menus/system*.lua`
+  had `Cache = false`, so elephant ran `menu --entries` on each query, and that took ~135 ms (two
+  `$(…)` subshells per entry for the translations, three `jq`). Now the translations read `I18N`
+  directly and one `jq` reads the three lists (~30 ms), and the menus (also `wallpapers.lua`, ~18 ms)
+  are cached with `RefreshOnChange` on folders (<1 ms per query). A cache in a Lua variable did not
+  work (elephant does not keep the globals) and file watches were lost after an atomic save.
 
 ## Login and lock
 

@@ -5,11 +5,31 @@
 -- Searching every entry lives in systemsearch.lua.
 Name = "system"
 NamePretty = "System menu"
-Cache = false
+-- Cached: elephant calls GetEntries again only when something that changes the entries does: the
+-- script (its real folder: ~/.local/bin/menu is a link into the repo), settings.json (hidden
+-- entries, order, custom ones), the language (es.js, /etc/locale.conf) and the installed packages
+-- (entries that need a program). Without the cache it ran «menu --entries» (~135 ms) on every
+-- keystroke. Folders, not files: a file watch is lost when the file is replaced by a rename
+-- (atomic saves: Quickshell, localectl, editors, git)
+Cache = true
+local HOME = os.getenv("HOME")
+local function real_dir(path)
+  local h = io.popen("dirname \"$(readlink -f '" .. path .. "')\"")
+  local dir = h and h:read("*l")
+  if h then h:close() end
+  return dir ~= "" and dir or HOME .. "/.local/bin"
+end
+RefreshOnChange = {
+  real_dir(HOME .. "/.local/bin/menu"),
+  HOME .. "/.config/quickshell",
+  HOME .. "/.config/quickshell/i18n",
+  "/etc",
+  "/var/lib/pacman/local",
+}
 HideFromProviderlist = true
 FixedOrder = true
 
-local MENU = os.getenv("HOME") .. "/.local/bin/menu"
+local MENU = HOME .. "/.local/bin/menu"
 
 function GetEntries()
   local entries = {}
