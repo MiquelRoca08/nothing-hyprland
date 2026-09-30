@@ -41,7 +41,7 @@ Scope {
 
                 Repeater {
                     model: [
-                        { icon: "󰌾", label: I18n.tr("Lock"),      cmd: "bloquear" },
+                        { icon: "󰌾", label: I18n.tr("Lock"),      cmd: "lock-screen" },
                         { icon: "󰍃", label: I18n.tr("Log out"), cmd: "command -v hyprshutdown >/dev/null && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'" },
                         { icon: "󰤄", label: I18n.tr("Suspend"),     cmd: "systemctl suspend" },
                         { icon: "󰜉", label: I18n.tr("Reboot"),     cmd: "systemctl reboot" },

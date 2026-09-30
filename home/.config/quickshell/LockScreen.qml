@@ -1,5 +1,5 @@
 // Native lock screen (replaces hyprlock): Wayland's ext-session-lock
-// protocol + PAM. Locked with `bloquear` (~/.local/bin), which calls
+// protocol + PAM. Locked with `lock-screen` (~/.local/bin), which calls
 // `qs ipc call lock lock` and, if the shell does not answer, falls back to hyprlock.
 // The content of each monitor is in LockSurface.qml.
 //

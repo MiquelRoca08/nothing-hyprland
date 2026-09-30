@@ -33,6 +33,11 @@ comes back or a decision needs its background. Dates are from September 2026.
     `tesseract-data-<lang>`.
   - Removed: `scripts/migrar-privado.sh` (one-off migration, done) and the `~/Documents/SYSTEM.md`
     link. The `links` and `system` modules remove the stale links and `/etc` files left behind.
+- **30 Sep — Idle lock was broken by the rename.** `Config.qml` still wrote `lock_cmd = bloquear`
+  into `hypridle.conf`, and the power menu and Settings' «Lock» still ran `bloquear`: after the
+  rename that command no longer existed, so idle and suspend did not lock (the screen turned off
+  and on waking the session was open, no password) and those buttons did nothing. Now
+  `lock-screen`. After a rename, `grep -rw <old name>` the repo.
 - **28–29 Sep — Language support.** Shell, menus, scripts and installer moved to English source
   texts with a Spanish dictionary (`i18n/es.js`, `i18n/i18n.sh`). Menu settings saved with the old
   Spanish entry names are renamed once by `Config.migrateMenu()`.

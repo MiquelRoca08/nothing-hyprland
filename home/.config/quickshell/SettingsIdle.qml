@@ -84,7 +84,7 @@ SettingsPage {
             Button { icon: "󰈈"; text: I18n.tr("Try"); onClicked: { ShellState.settingsOpen = false; Quickshell.execDetached(["qs", "ipc", "call", "lock", "test"]) } }
             Button {
                 kind: "primary"; icon: "󰌾"; text: I18n.tr("Lock")
-                onClicked: { ShellState.settingsOpen = false; Quickshell.execDetached(["bloquear"]) }
+                onClicked: { ShellState.settingsOpen = false; Quickshell.execDetached(["lock-screen"]) }
             }
         }
         SettingsRow {
