@@ -145,8 +145,8 @@ comes back or a decision needs its background. Dates are from September 2026.
   are cached with `RefreshOnChange` on folders (<1 ms per query). A cache in a Lua variable did not
   work (elephant does not keep the globals) and file watches were lost after an atomic save.
 - **30 Sep — `elephant-archlinuxpkgs-bin` removed.** No set or prefix used it, and on every start it
-  rewrote `~/.cache/elephant/archlinuxpkgs.json` (~90 MB): elephant peaked at ~740 MB and took ~1 s
-  to start.
+  rewrote `~/.cache/elephant/archlinuxpkgs.json` (~90 MB): elephant peaked at ~740 MB (~180 MB
+  without it). Startup time did not change (~1.2 s).
 
 ## Login and lock
 
