@@ -11,8 +11,10 @@ Files: `home/.config/walker/`, `home/.config/elephant/`, `home/.config/systemd/u
 
 - **Packages** (AUR, `packages-aur.txt`): `walker` and `elephant-bin` plus the `elephant-*-bin`
   providers (desktopapplications, calc, clipboard, files, runner, symbols, unicode, websearch,
-  providerlist, menus, windows, bookmarks, todo, archlinuxpkgs, bluetooth, playerctl, wireplumber,
-  snippets). Without the providers walker shows "No Results". walker comes from the AUR: reinstall it
+  providerlist, menus, windows, bookmarks, todo, bluetooth, playerctl, wireplumber, snippets).
+  Without the providers walker shows "No Results". Not `elephant-archlinuxpkgs-bin`: nothing used
+  it (packages are installed from the menu, with fzf) and it rewrote a ~90 MB cache on every elephant
+  start (~740 MB peak memory, ~1 s startup). walker comes from the AUR: reinstall it
   with `yay -S walker`, not `pacman -S`.
 - **User services** (enabled by the `appearance` installer module): `elephant.service` and
   `walker.service` (`walker --gapplication-service`, so it opens instantly), with `Restart=always`

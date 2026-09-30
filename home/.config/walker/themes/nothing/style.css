@@ -142,10 +142,6 @@ scrollbar slider {
   -gtk-icon-size: 64px;
 }
 
-.preview-content.archlinuxpkgs {
-  font-family: "JetBrainsMono Nerd Font";
-}
-
 /* Actions menu (alt+j) */
 popover {
   background: @surface;

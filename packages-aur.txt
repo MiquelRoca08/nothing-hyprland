@@ -16,7 +16,6 @@ elephant-menus-bin
 elephant-windows-bin
 elephant-bookmarks-bin
 elephant-todo-bin
-elephant-archlinuxpkgs-bin
 elephant-bluetooth-bin
 elephant-playerctl-bin
 elephant-wireplumber-bin
