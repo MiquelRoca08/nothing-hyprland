@@ -45,7 +45,10 @@ function GetEntries()
         action = MENU .. " run " .. target
       end
       table.insert(entries, {
-        Text = icon .. "  " .. label,
+        -- The glyph as the icon, not inside the text: walker draws it in its own 32 px box
+        -- (.item-image-text), like the apps' icons, so every row lines up
+        Icon = icon,
+        Text = label,
         Value = target,
         Actions = { activate = action },
       })

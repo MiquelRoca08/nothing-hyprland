@@ -75,21 +75,29 @@
 
 .item-text {
   color: @fg_soft;
+  /* The title always as tall as the row, so it is vertically centered: walker's text box
+     (title + hidden subtitle) is sometimes taller than the title and left it at the top */
+  min-height: 44px;
 }
 
 .item-subtext {
   font-size: 1px;
   min-height: 0;
-  margin: 0;
+  margin: -4px 0 0 0; /* the line of a 1 px font still takes ~4 px: takes it back */
   padding: 0;
   opacity: 0;
 }
 
+/* Icons: an app's (32 px image) and an option's (a glyph, the Lua menus' Icon) in the same 32 px
+   box, so the text starts at the same place and every row looks the same */
 .item-image {
   margin-right: 12px;
 }
 
 .item-image-text {
+  min-width: 32px;
+  min-height: 32px;
+  margin-right: 12px;
   font-size: 18px;
 }
 

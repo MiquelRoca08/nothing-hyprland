@@ -29,13 +29,22 @@ list_binds() {
           "XF86AudioRaiseVolume": "Vol +", "XF86AudioLowerVolume": "Vol −",
           "XF86AudioMute": "Mute", "XF86AudioMicMute": "Mic",
           "XF86MonBrightnessUp": "Brightness +", "XF86MonBrightnessDown": "Brightness −",
-          "XF86AudioNext": "⏭", "XF86AudioPrev": "⏮",
-          "XF86AudioPlay": "⏯", "XF86AudioPause": "⏸" }[.key] // .key;
+          "XF86AudioNext": "Next", "XF86AudioPrev": "Previous",
+          "XF86AudioPlay": "Play/Pause", "XF86AudioPause": "Pause" }[.key] // .key;
       .[] | select(.description != "" and .submap != "capture") | [(mods | join(" + ")), keyname, .description] | join("\u001f")' |
-        awk '!seen[$0]++' |
-        while IFS=$'\037' read -r m k d; do
-            printf '%-26s %s\n' "${m:+$m + }$(t "$k")" "$(desc "$d")"
-        done
+        awk '!seen[$0]++' | {
+            # Padding by characters, not bytes (printf %-Ns counts bytes: ← → ↑ ↓ took 3), and as wide
+            # as the longest combination, so the descriptions line up whatever binds there are
+            local LC_CTYPE=C.UTF-8 keys=() descs=() key width=0 i
+            while IFS=$'\037' read -r m k d; do
+                key="${m:+$m + }$(t "$k")"
+                keys+=("$key"); descs+=("$(desc "$d")")
+                ((${#key} > width)) && width=${#key}
+            done
+            for i in "${!keys[@]}"; do
+                printf '%s%*s  %s\n' "${keys[i]}" $((width - ${#keys[i]})) '' "${descs[i]}"
+            done
+        }
 }
 
 if [[ $1 == --print || $1 == -p ]]; then
