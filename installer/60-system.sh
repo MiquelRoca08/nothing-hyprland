@@ -66,4 +66,8 @@ module() {
         step "$(t "Delete what the repo no longer has")" sudo rm -f "${old[@]}"
     fi
     step "$(t "Reload systemd (in case units or drop-ins changed)")" sudo systemctl daemon-reload
+    # daemon-reload does not make logind re-read its config
+    if printf '%s\n' "${pending[@]}" "${old[@]}" | grep -q 'logind.conf'; then
+        step "$(t "Reload logind (power button)")" sudo systemctl reload systemd-logind
+    fi
 }

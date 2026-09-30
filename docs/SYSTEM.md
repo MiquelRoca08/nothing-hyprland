@@ -307,3 +307,8 @@ hyprlock). It is optional and needs an IR camera. How the lock screen uses it:
   rewrites it and would break a symlink). Web apps use chromium unless your default browser is
   Chromium-based.
 - **Spotify** runs as native Wayland (`~/.config/spotify-launcher.conf`, `--ozone-platform=wayland`).
+- **Power button:** a short press is ignored (`/etc/systemd/logind.conf.d/power-key.conf`,
+  `HandlePowerKey=ignore`); by default logind powered off on a single tap. Holding it ~4 s still
+  forces a power-off, done by the firmware (it cannot be blocked from Linux). Use the system menu
+  to shut down. Apply changes with `sudo systemctl reload systemd-logind` (`daemon-reload` is not
+  enough); the installer's system module does it when that file changes.

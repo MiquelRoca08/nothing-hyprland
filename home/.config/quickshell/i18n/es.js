@@ -666,6 +666,7 @@ var strings = {
     "Reload": "Recargar",
     "Reload Hyprland after each git pull that changes its config (the repo's git hooks)": "Recargar Hyprland tras cada git pull que cambie su configuración (hooks de git del repo)",
     "Reload systemd (in case units or drop-ins changed)": "Recargar systemd (por si han cambiado unidades o drop-ins)",
+    "Reload logind (power button)": "Recargar logind (botón de encendido)",
     "Remember this choice": "Recordar esta elección",
     "Remove": "Quitar",
     "Remove %1": "Quitar %1",
