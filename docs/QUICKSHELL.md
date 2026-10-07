@@ -239,6 +239,11 @@ shell and walker. See [SYSTEM.md](SYSTEM.md#arch-update).
 A theme recolours **the whole desktop**: the shell (live), Alacritty, walker, GTK apps (when they
 restart; plus the light/dark `color-scheme`) and Hyprland's borders.
 
+- GTK text selection uses the theme's `sel`/`selText` (a `selection { … }` rule in the generated
+  `theme.css`), not the adw-gtk3 default `alpha(accent, 0.25)`: with Nothing's white accent that
+  was invisible on light content, e.g. selected text on web pages in Firefox, which copies the GTK
+  selection colour.
+
 - A theme is a JSON: `colors` with `Theme.qml`'s tokens and `terminal` with the 16 terminal
   colours. `quickshell/themes/nothing.json` is the bundled one and the example; installed themes
   live in `~/.local/share/quickshell/themes/`.

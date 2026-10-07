@@ -61,6 +61,9 @@ comes back or a decision needs its background. Dates are from September 2026.
   `scripts/brightness.sh` now picks the backlight of the GPU the panel is on and uses DDC/CI for
   external monitors. The Settings slider used to spawn many `ddcutil` processes at once and slowed
   the whole system; it now sends one at a time.
+- **7 Oct — Invisible text selection in Firefox.** adw-gtk3 paints selections as
+  `alpha(@accent_bg_color, 0.25)`; with the white accent, white at 25 % on white pages. `theme.sh`
+  now adds `selection { background-color: sel; color: selText; }` to GTK's `theme.css`.
 - **Input options** moved from `conf/input.lua` into Settings (`settings.json` →
   `conf/shell-settings.lua`).
 

@@ -109,6 +109,10 @@ apply() {
             echo "@define-color popover_bg_color $(c bgAlt);"; echo "@define-color popover_fg_color $(c fg);"
             echo "@define-color popover_shade_color $shade;"; echo "@define-color shade_color $shade;"
             echo "@define-color scrollbar_outline_color $(c border);"
+            # Text selection: adw-gtk3/libadwaita use alpha(accent, 0.25), invisible with a white
+            # accent on light content (Firefox copies it as its page selection colour). User CSS wins
+            # over the theme whatever the selector's specificity.
+            echo "selection { background-color: $(c sel); color: $(c selText); }"
         } >"$g/theme.css"
         rm -f "$g/tema.css"
         d=$(dirname "$(readlink -f "$g/gtk.css" 2>/dev/null)")
