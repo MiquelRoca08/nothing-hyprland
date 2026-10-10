@@ -118,5 +118,12 @@ Backspace runs `menu-back` (go back one level) and everything else keeps working
 - Why not `force_zero_scaling = true` (a common default): X11 apps become tiny on a scale-2
   screen. Steam's own scaling options do not help: `STEAM_FORCE_DESKTOPUI_SCALING` is ignored by the
   current client and `-forcedesktopscaling` only takes integers.
+- **Keep all monitors top-aligned (every `y = 0`).** XWayland reports every output with `y = 0`
+  (`xrandr` shows `+X+0`) whatever the vertical position in `conf/monitors.lua`, while Hyprland
+  places X11 windows using its own layout. With a monitor at another height (e.g. `1600x-600`, or
+  `0x600` for the other one) the two coordinate systems disagree: Wine centres dialogs on a
+  monitor using XWayland's numbers and Hyprland draws them off-screen (a Live "audio is disabled"
+  box looked like a hang), and clicks can land in the wrong place. Settings → Displays already
+  normalises positions to start at `0,0`, but only horizontal offsets are safe for X11 apps.
 - Prefer native Wayland where the app supports it: Spotify runs with `--ozone-platform=wayland`
   (`~/.config/spotify-launcher.conf`).
