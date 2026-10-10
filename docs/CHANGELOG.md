@@ -77,12 +77,6 @@ comes back or a decision needs its background. Dates are from September 2026.
   were tiny on the scale-2 panel. Tried and dropped: `STEAM_FORCE_DESKTOPUI_SCALING` (ignored by
   the current client), `-forcedesktopscaling` (integers only), per-monitor scaling at launch or an
   automatic restart when moving monitors (worked, but the simple option won).
-- **10 Oct — Monitors must be top-aligned for X11 apps.** Symptom: Wine apps (Ableton Live,
-  installers) seemed hung or ignored clicks; a Live message box was being drawn off-screen. Cause:
-  the external monitor was at `1600x-600`; XWayland reports all outputs at `y = 0`, so its
-  coordinates and Hyprland's disagreed by the vertical offset (moving the other monitor to
-  `0x600` did not help either). Fix: `conf/monitors.lua` with both monitors at `y = 0`; documented
-  under "X11 app scaling" in `HYPRLAND.md`.
 - `SUPER+SHIFT+S` changed from "move to special workspace" to region capture.
 - **Per-machine monitors and own autostart apps.** `conf/monitors.lua` left git (it had the
   reference laptop's `eDP-1`/`DP-9`): the `links` module creates it on each machine from the previous
