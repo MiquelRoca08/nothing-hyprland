@@ -1,0 +1,8 @@
+# Logitech M705: no high-resolution wheel events. hid-logitech-hidpp reports the wheel in 1/8
+# detent steps (REL_WHEEL_HI_RES); games under XWayland/SDL/GLFW counted every fraction as a full
+# step (one detent switched several weapons in CS2) and a bump when putting the mouse down moved
+# the Minecraft hotbar. Without these codes libinput only uses REL_WHEEL: one event per detent.
+[Logitech M705 no hi-res wheel]
+MatchUdevType=mouse
+MatchName=*M705*
+AttrEventCode=-REL_WHEEL_HI_RES;-REL_HWHEEL_HI_RES;

@@ -168,7 +168,7 @@ su sitio de siempre y el cambio ya está en el repo.
 | `home/.local/bin/` | Scripts: `menu` (menú del sistema), `screenshot`, `record`, `packages`, `webapp`, `tui`, `lock-screen`, `share-picker`, `modrinth-app`, `menu-keybinds`… |
 | `home/.local/share/` | Fuente Doto (OFL) y el tema GTK «NothingOS» (adw-gtk3-dark renombrado) |
 | `home/.claude/skills/system/` | Skill de agente para arreglar y configurar esta instalación |
-| `system/` | **Copias y plantillas** de archivos del sistema: greetd, PAM, Howdy, Limine, mkinitcpio, splash de la UKI, parche de audio del G14, `arch-update`, hook de pacman y estado de ALSA |
+| `system/` | **Copias y plantillas** de archivos del sistema: greetd, PAM, Howdy, Limine, mkinitcpio, splash de la UKI, parche de audio del G14, quirk de libinput, `arch-update`, hook de pacman y estado de ALSA |
 | `installer/`, `install.sh` | El instalador |
 | `packages.txt`, `packages-aur.txt`, `links.txt` | Paquetes (repositorios y AUR, cada uno con su comentario) y las rutas que se enlazan |
 | `features.txt` | Funciones opcionales (paquetes, servicios, archivos de sistema) que el módulo `features` te deja quitar |

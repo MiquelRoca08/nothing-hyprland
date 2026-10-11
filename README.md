@@ -166,7 +166,7 @@ always were and the change is already in the repo.
 | `home/.local/bin/` | Scripts: `menu` (system menu), `screenshot`, `record`, `packages`, `webapp`, `tui`, `lock-screen`, `share-picker`, `modrinth-app`, `menu-keybinds`… |
 | `home/.local/share/` | Doto font (OFL) and the «NothingOS» GTK theme (adw-gtk3-dark renamed) |
 | `home/.claude/skills/system/` | An agent skill for fixing and configuring this setup |
-| `system/` | **Copies/templates** of system files: greetd, PAM, Howdy, Limine, mkinitcpio, UKI splash, G14 audio patch, `arch-update`, pacman hook, ALSA state |
+| `system/` | **Copies/templates** of system files: greetd, PAM, Howdy, Limine, mkinitcpio, UKI splash, G14 audio patch, libinput quirk, `arch-update`, pacman hook, ALSA state |
 | `installer/`, `install.sh` | The installer |
 | `packages.txt`, `packages-aur.txt`, `links.txt` | Packages (repos and AUR, each with a comment) and the paths to link |
 | `features.txt` | Optional features (packages, services, system files) the `features` module lets you leave out |

@@ -20,7 +20,7 @@ CS35L56 amplifiers, and an IR camera. Look up your own with `lspci -k`, `hyprctl
 | G14 audio patch | `system/etc/modprobe.d/g14-audio.conf`, `system/usr/lib/firmware/g14-audio.fw` | The patch only matches this codec's IDs, so it is inert elsewhere, but you can delete both files |
 | Howdy camera | `system/etc/howdy/config.ini` (`device_path`) | A `/dev/v4l/by-path/…` path of this laptop's IR camera: set yours (`ls /dev/v4l/by-path/`) |
 | Limine background | `system/boot/EFI/BOOT/limine-nothing.png` | Drawn for 2880×1800; stretched at other resolutions |
-| Personal input rules | `conf/input.lua` | A Logitech M705 rule (flat acceleration, slower scroll) and a CS2 scroll rule; harmless without those devices/apps |
+| Personal input rules | `conf/input.lua`, `system/etc/libinput/local-overrides.quirks` | A Logitech M705 rule (flat acceleration, slower scroll, no hi-res wheel) and CS2/Minecraft scroll rules; harmless without those devices/apps |
 | Autostarted apps | `conf/autostart-local.lua` (not in git) | The repo only starts the desktop itself; your apps (on the reference laptop: `steam`, `rog-control-center`, `discord`) go in this list, imported from your previous config by `./install.sh links` |
 | GPU drivers | not in `packages.txt` | Install your GPU's drivers yourself (e.g. `nvidia-open` + `nvidia-utils`) |
 
@@ -115,6 +115,20 @@ If the external monitor stays black after boot:
   on the panel ([HYPRLAND.md](HYPRLAND.md#x11-app-scaling)).
 - The Win11-Fluent cursor (optional, from `private/`) needs a 64 px hand cursor for scale 2; see
   [SYSTEM.md](SYSTEM.md#cursor).
+
+## Mouse wheel in games
+
+- The Logitech M705's wheel is high-resolution: `hid-logitech-hidpp` sends `REL_WHEEL_HI_RES` in
+  1/8-detent steps. Games counted every fraction as a full step: one detent switched several
+  weapons in CS2, and the small bump when putting the mouse down moved the Minecraft hotbar.
+- `system/etc/libinput/local-overrides.quirks` disables `REL_WHEEL_HI_RES`/`REL_HWHEEL_HI_RES` for
+  that mouse, so libinput only uses `REL_WHEEL` (one event per detent; the kernel only sends it once
+  a full detent has turned). Cost: no smooth sub-detent scrolling on the desktop. For another
+  mouse, change `MatchName` (names in `/proc/bus/input/devices`). libinput reads quirks when a
+  device is added: reconnect the mouse (or the receiver) after installing it.
+- `conf/input.lua` sets `scroll_mouse = 1.0` for CS2 and Minecraft (title `^Minecraft`): with the
+  M705's `scroll_factor = 0.6` a detent was 0.6 of a step, so XWayland sent a wheel click only every
+  other detent and Minecraft skipped or missed slots.
 
 ## Secure Boot
 

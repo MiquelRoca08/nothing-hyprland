@@ -242,10 +242,17 @@ It happened several times with different causes:
 - **11 Oct — Modrinth App laggy.** The package's wrapper disables WebKit's DMA-BUF renderer on any
   NVIDIA machine and the UI rendered on the dGPU. New `home/.local/bin/modrinth-app` runs it on
   the Mesa iGPU with the DMA-BUF renderer (see HARDWARE.md, "Hybrid graphics").
+- **11 Oct — Mouse wheel in games.** The M705's hi-res wheel made CS2 switch several weapons per
+  detent and small bumps moved the Minecraft hotbar. New libinput quirk
+  `system/etc/libinput/local-overrides.quirks` (no `REL_WHEEL_HI_RES` on the M705); CS2's
+  `scroll_mouse` 0.6 → 1.0 and a new Minecraft rule in `conf/input.lua`.
 
 ## Open items
 
 Things not yet verified on real hardware:
+
+- Mouse wheel in CS2 and Minecraft with the M705 quirk (one weapon/slot per detent, no hotbar
+  change on bumps); the Minecraft window title must match `^Minecraft`.
 
 - Face unlock after opening the lid (should search without pressing anything), the "face not
   recognized" message with the camera covered, and retry after an idle lock.
