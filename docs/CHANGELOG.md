@@ -239,6 +239,9 @@ It happened several times with different causes:
   one was made by downscaling the 96 px one (27 Sep). Cursor size went from 24 to 32.
 - **27 Sep — UI font** NotoSans Nerd Font → JetBrainsMono Nerd Font; Alacritty palette with red
   accents and muted colours; new bash prompt.
+- **11 Oct — Modrinth App laggy.** The package's wrapper disables WebKit's DMA-BUF renderer on any
+  NVIDIA machine and the UI rendered on the dGPU. New `home/.local/bin/modrinth-app` runs it on
+  the Mesa iGPU with the DMA-BUF renderer (see HARDWARE.md, "Hybrid graphics").
 
 ## Open items
 

@@ -165,7 +165,7 @@ su sitio de siempre y el cambio ya está en el repo.
 | `home/.config/quickshell/` | El shell; su `CLAUDE.md` es la guía de diseño y de las trampas de QML |
 | `home/.config/walker/`, `home/.config/elephant/` | Lanzador (tema `nothing`, sobre el de Omarchy), sus proveedores y menús Lua |
 | `home/.config/alacritty/`, `bash/`, `fastfetch/`, `gtk-3.0/`, `gtk-4.0/`, `nvim/plugin/clipboard.lua` | Terminal, prompt (con `ls`/`eza` en color), fetch, paleta GTK y portapapeles de nvim |
-| `home/.local/bin/` | Scripts: `menu` (menú del sistema), `screenshot`, `record`, `packages`, `webapp`, `tui`, `lock-screen`, `share-picker`, `menu-keybinds`… |
+| `home/.local/bin/` | Scripts: `menu` (menú del sistema), `screenshot`, `record`, `packages`, `webapp`, `tui`, `lock-screen`, `share-picker`, `modrinth-app`, `menu-keybinds`… |
 | `home/.local/share/` | Fuente Doto (OFL) y el tema GTK «NothingOS» (adw-gtk3-dark renombrado) |
 | `home/.claude/skills/system/` | Skill de agente para arreglar y configurar esta instalación |
 | `system/` | **Copias y plantillas** de archivos del sistema: greetd, PAM, Howdy, Limine, mkinitcpio, splash de la UKI, parche de audio del G14, `arch-update`, hook de pacman y estado de ALSA |

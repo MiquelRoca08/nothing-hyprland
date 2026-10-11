@@ -42,6 +42,12 @@ CS35L56 amplifiers, and an IR camera. Look up your own with `lspci -k`, `hyprctl
   power state from sysfs (which does not wake it) and only call `nvidia-smi` when it is already
   active.
 - **walker renderer.** `GSK_RENDERER=ngl` works on both GPUs; `cairo` left rendering artifacts.
+- **WebKitGTK apps on the iGPU.** Modrinth App (Tauri) lagged: its package wrapper sets
+  `WEBKIT_DISABLE_DMABUF_RENDERER=1` whenever an NVIDIA GPU exists, and glvnd picks NVIDIA's EGL
+  first, so it rendered on the dGPU through a slow fallback. `~/.local/bin/modrinth-app` (first in
+  `PATH`, so the `.desktop` file runs it) forces Mesa's EGL (`__EGL_VENDOR_LIBRARY_FILENAMES`) and
+  keeps the DMA-BUF renderer when there is an AMD/Intel GPU; otherwise it runs the package's
+  wrapper. Other Tauri/WebKitGTK apps with the same symptom can use the same two variables.
 
 ## External monitor without picture
 

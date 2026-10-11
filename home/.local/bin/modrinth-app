@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Modrinth App (Tauri + WebKitGTK) on hybrid NVIDIA laptops. The package's /usr/bin/modrinth-app
+# sets WEBKIT_DISABLE_DMABUF_RENDERER=1 whenever lspci shows an NVIDIA GPU, and glvnd picks NVIDIA's
+# EGL first, so the UI renders on the dGPU through a slow fallback path and lags. If there is also a
+# Mesa GPU (amdgpu, i915, xe), render on it with WebKit's normal DMA-BUF renderer instead.
+# ~/.local/bin is first in PATH, so this replaces the package's wrapper (its .desktop runs
+# `modrinth-app`). Otherwise, the package's wrapper as is.
+mesa=/usr/share/glvnd/egl_vendor.d/50_mesa.json
+for d in /sys/class/drm/card[0-9]*/device/driver; do
+    case $(basename "$(readlink -f "$d")") in
+        amdgpu | i915 | xe) igpu=1 ;;
+    esac
+done
+if [[ $igpu && -f $mesa && -x /usr/lib/modrinth-app ]]; then
+    unset WEBKIT_DISABLE_DMABUF_RENDERER
+    export __EGL_VENDOR_LIBRARY_FILENAMES=$mesa MODRINTH_EXTERNAL_UPDATE_PROVIDER=1
+    exec /usr/lib/modrinth-app "$@"
+fi
+exec /usr/bin/modrinth-app "$@"

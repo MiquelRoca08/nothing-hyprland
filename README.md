@@ -163,7 +163,7 @@ always were and the change is already in the repo.
 | `home/.config/quickshell/` | The shell; `CLAUDE.md` there is the guide to its design rules and known QML pitfalls |
 | `home/.config/walker/`, `home/.config/elephant/` | Launcher (theme `nothing`, based on Omarchy's) and its providers and Lua menus |
 | `home/.config/alacritty/`, `bash/`, `fastfetch/`, `gtk-3.0/`, `gtk-4.0/`, `nvim/plugin/clipboard.lua` | Terminal, prompt (with colored `ls`/`eza`), fetch, GTK palette and nvim clipboard |
-| `home/.local/bin/` | Scripts: `menu` (system menu), `screenshot`, `record`, `packages`, `webapp`, `tui`, `lock-screen`, `share-picker`, `menu-keybinds`… |
+| `home/.local/bin/` | Scripts: `menu` (system menu), `screenshot`, `record`, `packages`, `webapp`, `tui`, `lock-screen`, `share-picker`, `modrinth-app`, `menu-keybinds`… |
 | `home/.local/share/` | Doto font (OFL) and the «NothingOS» GTK theme (adw-gtk3-dark renamed) |
 | `home/.claude/skills/system/` | An agent skill for fixing and configuring this setup |
 | `system/` | **Copies/templates** of system files: greetd, PAM, Howdy, Limine, mkinitcpio, UKI splash, G14 audio patch, `arch-update`, pacman hook, ALSA state |

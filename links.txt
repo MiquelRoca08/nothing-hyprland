@@ -31,4 +31,5 @@
 .local/bin/tui
 .local/bin/lock-screen
 .local/bin/share-picker
+.local/bin/modrinth-app
 .claude/skills/system
