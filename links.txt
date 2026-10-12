@@ -33,3 +33,4 @@
 .local/bin/share-picker
 .local/bin/modrinth-app
 .claude/skills/system
+.claude/agents/haiku-helper.md

@@ -43,6 +43,12 @@ comes back or a decision needs its background. Dates are from September 2026.
   Spanish entry names are renamed once by `Config.migrateMenu()`.
 - **Private data out of git.** Machine data became templates filled in by the installer; the
   user's own non-redistributable files moved to `private/` (git-ignored).
+- **12 Oct — Haiku helper subagent.** `home/.claude/agents/haiku-helper.md` (linked to
+  `~/.claude/agents/`) runs quick, mechanical jobs (finding files, grep, reading logs, renames,
+  one-line edits, running a command) on Haiku, which uses less of the plan's limit than Opus. Its
+  description says "Use proactively" so Claude delegates by itself. The routing note that makes
+  delegation more reliable stays out of the repo, in each machine's `~/.claude/CLAUDE.md`, so
+  installing these dotfiles does not replace anyone's global instructions.
 
 ## Shell (Quickshell)
 
