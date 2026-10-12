@@ -21,6 +21,7 @@ hl.device({
 
 -- Games: one wheel detent = one step. With a factor below 1 (the M705's 0.6) a detent is a
 -- fraction of a step: XWayland only sends a wheel click every ~2 detents and Minecraft skips slots.
+-- Match patterns must cover the whole string (RE2 full match): "Minecraft.*", not "^Minecraft".
 hl.window_rule({
     name  = "cs2-scroll",
     match = { class = "cs2" },
@@ -28,6 +29,6 @@ hl.window_rule({
 })
 hl.window_rule({
     name  = "minecraft-scroll",
-    match = { title = "^Minecraft" },
+    match = { class = "Minecraft.*" },
     scroll_mouse = 1.0,
 })

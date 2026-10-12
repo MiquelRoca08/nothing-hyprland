@@ -126,9 +126,11 @@ If the external monitor stays black after boot:
   a full detent has turned). Cost: no smooth sub-detent scrolling on the desktop. For another
   mouse, change `MatchName` (names in `/proc/bus/input/devices`). libinput reads quirks when a
   device is added: reconnect the mouse (or the receiver) after installing it.
-- `conf/input.lua` sets `scroll_mouse = 1.0` for CS2 and Minecraft (title `^Minecraft`): with the
-  M705's `scroll_factor = 0.6` a detent was 0.6 of a step, so XWayland sent a wheel click only every
-  other detent and Minecraft skipped or missed slots.
+- `conf/input.lua` sets `scroll_mouse = 1.0` for CS2 and Minecraft (class `Minecraft.*`, e.g.
+  `Minecraft* 26.2`): with the M705's `scroll_factor = 0.6` a detent was 0.6 of a step, so XWayland
+  sent a wheel click only every other detent and Minecraft skipped or missed slots.
+- Window rule patterns are matched against the **whole** string (RE2 full match): `^Minecraft`
+  never matched the title `Minecraft* 26.2 - Un jugador`. Use `Minecraft.*`.
 
 ## Secure Boot
 

@@ -246,13 +246,16 @@ It happened several times with different causes:
   detent and small bumps moved the Minecraft hotbar. New libinput quirk
   `system/etc/libinput/local-overrides.quirks` (no `REL_WHEEL_HI_RES` on the M705); CS2's
   `scroll_mouse` 0.6 → 1.0 and a new Minecraft rule in `conf/input.lua`.
+- **12 Oct — Minecraft still missed wheel detents.** The kernel reported every detent, but XWayland
+  received 0.6-step scrolls: the rule's `title = "^Minecraft"` never matched, because Hyprland
+  matches rule patterns against the whole string. Now `class = "Minecraft.*"` in `conf/input.lua`.
 
 ## Open items
 
 Things not yet verified on real hardware:
 
 - Mouse wheel in CS2 and Minecraft with the M705 quirk (one weapon/slot per detent, no hotbar
-  change on bumps); the Minecraft window title must match `^Minecraft`.
+  change on bumps).
 
 - Face unlock after opening the lid (should search without pressing anything), the "face not
   recognized" message with the camera covered, and retry after an idle lock.
