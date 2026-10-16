@@ -70,6 +70,11 @@ comes back or a decision needs its background. Dates are from September 2026.
 - **7 Oct — Invisible text selection in Firefox.** adw-gtk3 paints selections as
   `alpha(@accent_bg_color, 0.25)`; with the white accent, white at 25 % on white pages. `theme.sh`
   now adds `selection { background-color: sel; color: selText; }` to GTK's `theme.css`.
+- **17 Oct — Bluetooth headset connecting and dropping at once.** A Nothing Ear with multipoint
+  connected and disconnected immediately. `bluetoothctl info` showed `Trusted: yes` but
+  `Paired: no`: `SettingsBluetooth` set `trusted` before `pair()`, so a failed pairing left a
+  device BlueZ accepts but cannot authenticate. Now it trusts and connects only after `paired`,
+  untrusts on failure, and marks keyless devices to pair again (see QUICKSHELL.md → Settings).
 - **Input options** moved from `conf/input.lua` into Settings (`settings.json` →
   `conf/shell-settings.lua`).
 

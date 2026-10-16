@@ -180,6 +180,16 @@ system's age (from the first line of `/var/log/pacman.log`, or the creation date
   its terminals). Install them with `./install.sh features` + `packages`, or `sudo pacman -S bluez
   bluez-utils` / `cups cups-filters ghostscript avahi nss-mdns`.
 - **Bluetooth:** on/off, scan, pair, connect, forget.
+  - Pairing turns the adapter `pairable` on, calls `pair()` and only **after** `paired` arrives
+    sets `trusted` and connects. Trusting first left a device Trusted but not Paired when pairing
+    failed: BlueZ accepts its connections and drops them at once for lack of keys (a multipoint
+    headset connects and disconnects in a loop).
+  - A known device without keys (trusted or connected but not paired) shows «Click to pair again»
+    in red and the forget button; clicking it disconnects, untrusts and pairs from scratch. A
+    failed pairing (no `paired` 1.5 s after `pairing` ends) untrusts it and asks to put the device
+    in pairing mode.
+  - Quickshell registers no BlueZ agent: pairing is "just works", fine for headsets, mice and
+    keyboards; devices that need a PIN or passkey have to be paired with `bluetoothctl`.
 - **Printers** (CUPS): installs whatever of `cups-filters ghostscript avahi nss-mdns` is missing
   (without Ghostscript nothing prints: "gstoraster filter failed") and enables the services. Printers with
   their state, default (per user), test page, resume and remove; the queue with each job's state,

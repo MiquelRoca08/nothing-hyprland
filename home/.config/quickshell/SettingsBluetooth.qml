@@ -33,6 +33,27 @@ SettingsPage {
     }
     Timer { id: powerOn; interval: 400; onTriggered: if (page.adapter) page.adapter.enabled = true }
 
+    // Pairing: trust and connect only once the bond exists. Trusting first
+    // left half-known devices when pairing failed (Trusted but not Paired):
+    // BlueZ then accepts their connections and drops them at once for lack of
+    // keys (a multipoint headset connects and disconnects in a loop).
+    // Quickshell has no agent: BlueZ pairs without one (just works), which is
+    // what headsets, mice and keyboards without a screen use.
+    property var pending: ({})      // address → true while we pair it
+    property string failed: ""      // last address that did not pair
+    function startPair(d) {
+        if (adapter && !adapter.pairable) adapter.pairable = true
+        failed = ""
+        const p = Object.assign({}, pending); p[d.address] = true; pending = p
+        d.pair()
+    }
+    function pairDone(d, ok) {
+        if (!pending[d.address]) return
+        const p = Object.assign({}, pending); delete p[d.address]; pending = p
+        if (ok) { d.trusted = true; d.connect() }
+        else { if (d.trusted) d.trusted = false; failed = d.address }
+    }
+
     // Stop scanning when leaving the page
     Component.onDestruction: if (adapter?.discovering) adapter.discovering = false
 
@@ -74,6 +95,18 @@ SettingsPage {
                 readonly property bool busy: modelData.pairing
                     || modelData.state === BluetoothDeviceState.Connecting
                     || modelData.state === BluetoothDeviceState.Disconnecting
+                // Known but without keys (left by a failed pairing or a reset
+                // on the device's side): it only works after pairing again
+                readonly property bool broken: !modelData.paired && (modelData.trusted || modelData.connected)
+                readonly property bool didFail: page.failed === modelData.address
+
+                Connections {
+                    target: dev.modelData
+                    function onPairedChanged() { if (dev.modelData.paired) page.pairDone(dev.modelData, true) }
+                    // Pairing ends before Paired arrives: wait a moment before calling it a failure
+                    function onPairingChanged() { if (!dev.modelData.pairing) pairCheck.restart() }
+                }
+                Timer { id: pairCheck; interval: 1500; onTriggered: if (!dev.modelData.paired) page.pairDone(dev.modelData, false) }
                 Layout.fillWidth: true
                 implicitHeight: 38
                 radius: 8
@@ -97,20 +130,29 @@ SettingsPage {
                         font.pixelSize: 11
                     }
                     BarText {
-                        text: dev.busy ? "…" : dev.modelData.connected ? I18n.tr("Connected") : dev.modelData.paired ? I18n.tr("Paired") : ""
-                        color: Theme.dim
+                        text: dev.busy ? "…"
+                            : dev.didFail ? I18n.tr("Not paired: put it in pairing mode and click again")
+                            : dev.broken ? I18n.tr("Click to pair again")
+                            : dev.modelData.connected ? I18n.tr("Connected")
+                            : dev.modelData.paired ? I18n.tr("Paired") : ""
+                        color: dev.didFail || dev.broken ? Theme.red : Theme.dim
                         font.pixelSize: 11
                     }
-                    IconButton { visible: dev.modelData.paired; danger: true; onClicked: dev.modelData.forget() }
+                    IconButton { visible: dev.modelData.paired || dev.broken; danger: true; onClicked: dev.modelData.forget() }
                 }
 
                 TapHandler {
                     onTapped: {
                         const d = dev.modelData
                         if (dev.busy) return
-                        if (d.connected) d.disconnect()
-                        else if (d.paired) d.connect()
-                        else { d.trusted = true; d.pair() }
+                        if (d.paired) { if (d.connected) d.disconnect(); else d.connect() }
+                        else {
+                            // A device that connects without keys keeps dropping:
+                            // let go of it and pair from scratch
+                            if (d.connected) d.disconnect()
+                            if (d.trusted) d.trusted = false
+                            page.startPair(d)
+                        }
                     }
                 }
             }
