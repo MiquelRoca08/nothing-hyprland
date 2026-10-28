@@ -219,6 +219,10 @@ system's age (from the first line of `/var/log/pacman.log`, or the creation date
     shows an «Install LHDC» button (`yay` in the floating terminal, then restarts WirePlumber) or,
     with the plugin already there, asks to reconnect. To undo it: remove the three packages and
     restart WirePlumber.
+    Checked with the Nothing Ear (Oct 2026, plugin `1.7.0.r15994`): the default profile `a2dp-sink`
+    becomes «codec LHDC v5» (sink `api.bluez5.codec = lhdc_v5`), AAC gets its own `a2dp-sink-aac`, and
+    the master plugin adds `a2dp-auto-prefer-quality|latency`, which the panel leaves out (only
+    `a2dp-sink*` and `headset-head-unit*` become chips).
 - **Printers** (CUPS): installs whatever of `cups-filters ghostscript avahi nss-mdns` is missing
   (without Ghostscript nothing prints: "gstoraster filter failed") and enables the services. Printers with
   their state, default (per user), test page, resume and remove; the queue with each job's state,
