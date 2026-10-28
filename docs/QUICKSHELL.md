@@ -165,7 +165,11 @@ system's age (from the first line of `/var/log/pacman.log`, or the creation date
 
 ### Connections
 
-- **Wi-Fi:** on/off, scan, connect, disconnect, forget. Three kinds of network, from `nmcli`'s
+- **Wi-Fi:** on/off, scan, connect, disconnect, forget. Scanning is a loop of three real scans
+  (`nmcli device wifi list --rescan yes`, ~5 s each, waits for the results; `nmcli device wifi
+  rescan` only requests one and returns at once, so the list used to reload before anything new
+  arrived), reloading the list after each one. It starts by itself when the page opens and stops
+  when leaving it; the button turns into «Stop scanning» and the panel's icon spins. Three kinds of network, from `nmcli`'s
   SECURITY field: **open** (empty or `OWE`: connect without asking), **WPA/WPA3 personal**
   (password) and **802.1X enterprise** such as eduroam (user, password and method, PEAP/MSCHAPv2 by
   default or TTLS/PAP; under "More options", anonymous identity and the server domain, which turns
@@ -198,6 +202,13 @@ system's age (from the first line of `/var/log/pacman.log`, or the creation date
     profile without a suffix (`a2dp-sink`) is the default codec and repeats one of the others, so
     only one chip is kept. Choosing runs `pactl set-card-profile`; a `pactl subscribe` rereads
     on any card change (another app, automatic switch to HFP).
+    Only the codecs that **both** sides support show up. The Nothing Ear advertise SBC, AAC and
+    LHDC v3/v5 (vendor Savitech `0x053a`, see the endpoints with `busctl get-property org.bluez
+    /org/bluez/hci0/dev_…/sepN org.bluez.MediaEndpoint1 Codec Capabilities`): they offer LDAC
+    **or** LHDC, chosen in the Nothing X app, not both at once. Arch's PipeWire has LDAC
+    (`libspa-codec-bluez5-ldac.so`, `libldac`) but no LHDC: it needs Savitech's library
+    (`liblhdcv5`, AUR) and a build with `bluez5-codec-lhdc`; with LHDC chosen on the earbuds, Linux
+    falls back to AAC. For LDAC: switch the earbuds to LDAC in Nothing X and reconnect.
 - **Printers** (CUPS): installs whatever of `cups-filters ghostscript avahi nss-mdns` is missing
   (without Ghostscript nothing prints: "gstoraster filter failed") and enables the services. Printers with
   their state, default (per user), test page, resume and remove; the queue with each job's state,

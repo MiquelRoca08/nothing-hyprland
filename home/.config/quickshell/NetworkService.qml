@@ -21,7 +21,11 @@ Singleton {
     property string busySsid: ""       // connecting to…
     property string error: ""
     property string askSsid: ""        // saved network that asked for credentials: WifiList opens the form
-    readonly property bool scanning: rescanProc.running
+    // Scan loop: «nmcli device wifi rescan» only asks for a scan and returns at once (the list
+    // reloaded before any result arrived); «list --rescan yes» waits for the scan (~5 s). A few
+    // rounds in a row, reloading after each, so networks that answer late show up too.
+    property bool scanning: false
+    property int scanLeft: 0
 
     // DNS of the current connection (Settings → Wi-Fi). dnsMode: "auto" (the router's, via DHCP), a
     // dnsPresets key or "custom"; dnsServers: the ones set on the connection; dnsInUse: the ones
@@ -83,7 +87,13 @@ Singleton {
 
     function refresh() { statusProc.running = true }
     function reload() { listProc.running = true }
-    function rescan() { rescanProc.running = true }
+    function rescan() { scanning ? stopScan() : startScan() }
+    function startScan() {
+        if (scanning || !wifiOn) return
+        scanning = true; scanLeft = 3
+        rescanProc.running = true
+    }
+    function stopScan() { scanning = false; scanLeft = 0; scanPause.stop() }
     function setWifi(on) {
         wifiOn = on
         radioProc.command = ["nmcli", "radio", "wifi", on ? "on" : "off"]
@@ -242,6 +252,15 @@ Singleton {
     Timer { id: dnsLater; interval: 1500; onTriggered: root.dnsLoad() }
     onNameChanged: dnsLoad()
     Process { id: radioProc; onExited: { root.reload(); root.refresh() } }
-    Process { id: rescanProc; command: ["nmcli", "device", "wifi", "rescan"]; onExited: root.reload() }
+    Process {
+        id: rescanProc
+        command: ["sh", "-c", "nmcli device wifi list --rescan yes >/dev/null"]
+        onExited: {
+            root.reload()
+            if (root.scanning && --root.scanLeft > 0) scanPause.restart()
+            else root.stopScan()
+        }
+    }
+    Timer { id: scanPause; interval: 1000; onTriggered: if (root.scanning) rescanProc.running = true }
     Timer { id: later; interval: 1500; onTriggered: { root.reload(); root.refresh() } }
 }

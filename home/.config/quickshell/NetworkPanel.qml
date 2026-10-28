@@ -53,9 +53,17 @@ Item {
                         spacing: 16
                         BarText { text: "Wi-Fi"; font.bold: true; Layout.fillWidth: true }
                         BarText {
+                            id: scanIcon
                             text: "󰑐"
                             visible: NetworkService.wifiOn
-                            color: NetworkService.scanning ? Theme.dim : Theme.fg
+                            color: NetworkService.scanning ? Theme.sel : Theme.fg
+                            // Spins while scanning (click again to stop)
+                            RotationAnimation on rotation {
+                                running: NetworkService.scanning
+                                loops: Animation.Infinite
+                                from: 0; to: 360; duration: 1000
+                                onRunningChanged: if (!running) scanIcon.rotation = 0
+                            }
                             MouseArea {
                                 anchors.fill: parent; anchors.margins: -4
                                 cursorShape: Qt.PointingHandCursor

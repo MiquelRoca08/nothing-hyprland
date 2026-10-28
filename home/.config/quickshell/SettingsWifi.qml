@@ -8,7 +8,8 @@ SettingsPage {
     id: page
     title: "Wi-Fi"
     subtitle: I18n.tr("Available and saved networks, and DNS")
-    Component.onCompleted: { NetworkService.reload(); NetworkService.dnsLoad() }
+    Component.onCompleted: { NetworkService.reload(); NetworkService.dnsLoad(); NetworkService.startScan() }
+    Component.onDestruction: NetworkService.stopScan()
     // Option chosen in the chips: follows the connection's, except while typing a custom one
     property string dnsChoice: NetworkService.dnsMode
     Connections {
@@ -37,10 +38,25 @@ SettingsPage {
         visible: NetworkService.wifiOn
         RowLayout {
             Layout.fillWidth: true
-            BarText { text: I18n.tr("Click to connect · click the connected one to disconnect"); color: Theme.dim; font.pixelSize: 11; Layout.fillWidth: true }
+            BarText {
+                id: scanHint
+                text: NetworkService.scanning ? I18n.tr("Scanning: new networks appear as they answer…")
+                                              : I18n.tr("Click to connect · click the connected one to disconnect")
+                color: NetworkService.scanning ? Theme.fgSoft : Theme.dim
+                font.pixelSize: 11
+                Layout.fillWidth: true
+                // Pulses while scanning
+                SequentialAnimation on opacity {
+                    running: NetworkService.scanning
+                    loops: Animation.Infinite
+                    onRunningChanged: if (!running) scanHint.opacity = 1
+                    NumberAnimation { to: 0.35; duration: 700; easing.type: Easing.InOutQuad }
+                    NumberAnimation { to: 1; duration: 700; easing.type: Easing.InOutQuad }
+                }
+            }
             Button {
-                icon: "󰑐"; text: I18n.tr("Scan")
-                busy: NetworkService.scanning
+                icon: NetworkService.scanning ? "󰓛" : "󰑐"
+                text: NetworkService.scanning ? I18n.tr("Stop scanning") : I18n.tr("Scan")
                 onClicked: NetworkService.rescan()
             }
         }

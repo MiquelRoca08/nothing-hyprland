@@ -731,6 +731,7 @@ var strings = {
     "Saved in excluded-features.txt": "Guardado en excluded-features.txt",
     "Scale": "Escala",
     "Scan": "Buscar",
+    "Scanning: new networks appear as they answer…": "Buscando: las redes nuevas aparecen según responden…",
     "Screen": "Pantalla",
     "Screen corners": "Esquinas de la pantalla",
     "Screen recording (gpu-screen-recorder)": "Grabación de pantalla (gpu-screen-recorder)",
