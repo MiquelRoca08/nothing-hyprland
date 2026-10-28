@@ -82,7 +82,7 @@ gets its Spanish in `i18n/es.js` (see «Language» in `docs/QUICKSHELL.md`).
   `SettingsKeybinds` (reads and rewrites `conf/keybinds.lua`; `-- ## …` sections; captures in the
   `capture` submap); `SettingsStorage` (data from `scripts/storage.sh`); Apps:
   `SettingsAppsInstalled` and `SettingsAppsInstall` (data from `scripts/apps.sh`; icons with
-  `AppIcon`); Connections: `SettingsWifi`, `SettingsBluetooth`, `SettingsPrinters` (CUPS; data from
+  `AppIcon`); Connections: `SettingsWifi`, `SettingsBluetooth` (codecs: `BluetoothCodecs`), `SettingsPrinters` (CUPS; data from
   `scripts/printers.sh`); Personalization: `SettingsWallpaper`, `SettingsThemes` (desktop themes
   and shapes), `SettingsFonts` (data from `scripts/fonts.sh`), QuickShell → `SettingsMenu`
   (walker menu: `menuHidden`, `menuOrder`, `menuCustom`, read by `~/.local/bin/menu`),

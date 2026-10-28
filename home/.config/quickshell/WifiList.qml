@@ -48,7 +48,12 @@ ColumnLayout {
                 RowLayout {
                     anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
                     spacing: 10
-                    BarText { text: NetworkService.signalIcon(row.modelData.signal) }
+                    // Fixed-width columns so the icons line up from row to row
+                    BarText {
+                        Layout.preferredWidth: 18
+                        horizontalAlignment: Text.AlignHCenter
+                        text: NetworkService.signalIcon(row.modelData.signal)
+                    }
                     BarText {
                         Layout.fillWidth: true
                         text: row.modelData.ssid
@@ -56,11 +61,19 @@ ColumnLayout {
                         font.bold: row.modelData.active
                     }
                     BarText {
+                        Layout.preferredWidth: row.busy ? implicitWidth : 18
+                        horizontalAlignment: Text.AlignHCenter
                         text: row.busy ? I18n.tr("Connecting…") : row.modelData.active ? "󰄬" : row.modelData.secure ? "󰌾" : ""
                         color: Theme.dim
                         font.pixelSize: row.busy ? 11 : Theme.fontSize
                     }
-                    IconButton { visible: root.showForget && row.modelData.known; danger: true; onClicked: NetworkService.forget(row.modelData) }
+                    // The slot is kept even if the network is not saved
+                    Item {
+                        visible: root.showForget
+                        implicitWidth: 28
+                        implicitHeight: 28
+                        IconButton { anchors.fill: parent; visible: row.modelData.known; danger: true; onClicked: NetworkService.forget(row.modelData) }
+                    }
                 }
 
                 TapHandler {

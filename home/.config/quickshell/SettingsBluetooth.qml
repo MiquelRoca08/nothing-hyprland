@@ -1,4 +1,5 @@
-// Settings → Bluetooth: turn on/off, scan, pair, connect and forget.
+// Settings → Bluetooth: turn on/off, scan, pair, connect and forget; codec of
+// connected headphones and speakers (BluetoothCodecs).
 import Quickshell
 import Quickshell.Bluetooth
 import Quickshell.Io
@@ -89,9 +90,15 @@ SettingsPage {
 
         Repeater {
             model: page.devices
-            delegate: Rectangle {
+            delegate: ColumnLayout {
                 id: dev
                 required property var modelData
+                Layout.fillWidth: true
+                spacing: 6
+                // Headphones and speakers (BlueZ icon audio-*): codec chooser, folded
+                readonly property bool isAudio: (modelData.icon || "").startsWith("audio-")
+                property bool expanded: false
+                readonly property bool showCodecs: expanded && isAudio && modelData.connected
                 readonly property bool busy: modelData.pairing
                     || modelData.state === BluetoothDeviceState.Connecting
                     || modelData.state === BluetoothDeviceState.Disconnecting
@@ -107,53 +114,71 @@ SettingsPage {
                     function onPairingChanged() { if (!dev.modelData.pairing) pairCheck.restart() }
                 }
                 Timer { id: pairCheck; interval: 1500; onTriggered: if (!dev.modelData.paired) page.pairDone(dev.modelData, false) }
-                Layout.fillWidth: true
-                implicitHeight: 38
-                radius: 8
-                color: hover.hovered || modelData.connected ? Theme.control : "transparent"
-                HoverHandler { id: hover; cursorShape: Qt.PointingHandCursor }
 
-                RowLayout {
-                    anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
-                    spacing: 10
-                    BarText { text: "󰂯"; color: dev.modelData.connected ? Theme.fg : Theme.dim }
-                    BarText {
-                        Layout.fillWidth: true
-                        text: dev.modelData.name || dev.modelData.address
-                        elide: Text.ElideRight
-                        font.bold: dev.modelData.connected
-                    }
-                    BarText {
-                        visible: dev.modelData.batteryAvailable
-                        text: "󰁹 " + Math.round(dev.modelData.battery * 100) + "%"
-                        color: Theme.dim
-                        font.pixelSize: 11
-                    }
-                    BarText {
-                        text: dev.busy ? "…"
-                            : dev.didFail ? I18n.tr("Not paired: put it in pairing mode and click again")
-                            : dev.broken ? I18n.tr("Click to pair again")
-                            : dev.modelData.connected ? I18n.tr("Connected")
-                            : dev.modelData.paired ? I18n.tr("Paired") : ""
-                        color: dev.didFail || dev.broken ? Theme.red : Theme.dim
-                        font.pixelSize: 11
-                    }
-                    IconButton { visible: dev.modelData.paired || dev.broken; danger: true; onClicked: dev.modelData.forget() }
-                }
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: 38
+                    radius: 8
+                    color: hover.hovered || dev.modelData.connected ? Theme.control : "transparent"
+                    HoverHandler { id: hover; cursorShape: Qt.PointingHandCursor }
 
-                TapHandler {
-                    onTapped: {
-                        const d = dev.modelData
-                        if (dev.busy) return
-                        if (d.paired) { if (d.connected) d.disconnect(); else d.connect() }
-                        else {
-                            // A device that connects without keys keeps dropping:
-                            // let go of it and pair from scratch
-                            if (d.connected) d.disconnect()
-                            if (d.trusted) d.trusted = false
-                            page.startPair(d)
+                    RowLayout {
+                        anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
+                        spacing: 10
+                        BarText { text: "󰂯"; color: dev.modelData.connected ? Theme.fg : Theme.dim }
+                        BarText {
+                            Layout.fillWidth: true
+                            text: dev.modelData.name || dev.modelData.address
+                            elide: Text.ElideRight
+                            font.bold: dev.modelData.connected
+                        }
+                        BarText {
+                            visible: dev.modelData.batteryAvailable
+                            text: "󰁹 " + Math.round(dev.modelData.battery * 100) + "%"
+                            color: Theme.dim
+                            font.pixelSize: 11
+                        }
+                        BarText {
+                            text: dev.busy ? "…"
+                                : dev.didFail ? I18n.tr("Not paired: put it in pairing mode and click again")
+                                : dev.broken ? I18n.tr("Click to pair again")
+                                : dev.modelData.connected ? I18n.tr("Connected")
+                                : dev.modelData.paired ? I18n.tr("Paired") : ""
+                            color: dev.didFail || dev.broken ? Theme.red : Theme.dim
+                            font.pixelSize: 11
+                        }
+                        IconButton {
+                            visible: dev.isAudio && dev.modelData.connected
+                            icon: dev.expanded ? "󰅃" : "󰅀"
+                            onClicked: dev.expanded = !dev.expanded
+                        }
+                        IconButton { visible: dev.modelData.paired || dev.broken; danger: true; onClicked: dev.modelData.forget() }
+                    }
+
+                    TapHandler {
+                        onTapped: {
+                            const d = dev.modelData
+                            if (dev.busy) return
+                            if (d.paired) { if (d.connected) d.disconnect(); else d.connect() }
+                            else {
+                                // A device that connects without keys keeps dropping:
+                                // let go of it and pair from scratch
+                                if (d.connected) d.disconnect()
+                                if (d.trusted) d.trusted = false
+                                page.startPair(d)
+                            }
                         }
                     }
+                }
+
+                Loader {
+                    active: dev.showCodecs
+                    visible: active
+                    Layout.fillWidth: true
+                    Layout.leftMargin: 10
+                    Layout.rightMargin: 10
+                    Layout.bottomMargin: 4
+                    sourceComponent: BluetoothCodecs { address: dev.modelData.address }
                 }
             }
         }

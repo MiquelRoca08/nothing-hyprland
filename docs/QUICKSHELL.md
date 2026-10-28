@@ -179,7 +179,7 @@ system's age (from the first line of `/var/log/pacman.log`, or the creation date
   field of `Config.settingsTree`, checked with `pacman -Qq` on start, when Settings opens and after
   its terminals). Install them with `./install.sh features` + `packages`, or `sudo pacman -S bluez
   bluez-utils` / `cups cups-filters ghostscript avahi nss-mdns`.
-- **Bluetooth:** on/off, scan, pair, connect, forget.
+- **Bluetooth:** on/off, scan, pair, connect, forget, audio codec.
   - Pairing turns the adapter `pairable` on, calls `pair()` and only **after** `paired` arrives
     sets `trusted` and connects. Trusting first left a device Trusted but not Paired when pairing
     failed: BlueZ accepts its connections and drops them at once for lack of keys (a multipoint
@@ -190,6 +190,14 @@ system's age (from the first line of `/var/log/pacman.log`, or the creation date
     in pairing mode.
   - Quickshell registers no BlueZ agent: pairing is "just works", fine for headsets, mice and
     keyboards; devices that need a PIN or passkey have to be paired with `bluetoothctl`.
+  - **Codec** (`BluetoothCodecs.qml`): connected audio devices (BlueZ icon `audio-*`: headsets,
+    headphones, speakers) get a chevron that unfolds the profiles of their PipeWire card
+    (`bluez_card.<address with _>`, from `pactl -f json list cards`) as chips: «Music» (A2DP:
+    SBC, SBC-XQ, AAC, LDAC… whatever the device offers) and «Calls» (HFP/HSP: CVSD, mSBC; the only
+    ones with a microphone). The codec is read from the profile description («codec AAC»); the
+    profile without a suffix (`a2dp-sink`) is the default codec and repeats one of the others, so
+    only one chip is kept. Choosing runs `pactl set-card-profile`; a `pactl subscribe` rereads
+    on any card change (another app, automatic switch to HFP).
 - **Printers** (CUPS): installs whatever of `cups-filters ghostscript avahi nss-mdns` is missing
   (without Ghostscript nothing prints: "gstoraster filter failed") and enables the services. Printers with
   their state, default (per user), test page, resume and remove; the queue with each job's state,
