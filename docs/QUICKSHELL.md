@@ -206,9 +206,19 @@ system's age (from the first line of `/var/log/pacman.log`, or the creation date
     LHDC v3/v5 (vendor Savitech `0x053a`, see the endpoints with `busctl get-property org.bluez
     /org/bluez/hci0/dev_…/sepN org.bluez.MediaEndpoint1 Codec Capabilities`): they offer LDAC
     **or** LHDC, chosen in the Nothing X app, not both at once. Arch's PipeWire has LDAC
-    (`libspa-codec-bluez5-ldac.so`, `libldac`) but no LHDC: it needs Savitech's library
-    (`liblhdcv5`, AUR) and a build with `bluez5-codec-lhdc`; with LHDC chosen on the earbuds, Linux
-    falls back to AAC. For LDAC: switch the earbuds to LDAC in Nothing X and reconnect.
+    (`libspa-codec-bluez5-ldac.so`, `libldac`) but no LHDC; without it, with LHDC chosen on the
+    earbuds, Linux falls back to AAC. For LDAC: switch the earbuds to LDAC in Nothing X and reconnect.
+  - **LHDC** is the optional feature `lhdc` (`features.txt`; not installed automatically, it builds
+    from git): `liblhdcv5` (Savitech's encoder), `pipewire-bluez5-lhdc-git` (the whole set of
+    PipeWire Bluetooth plugins built from PipeWire master with `bluez5-codec-lhdc`, installed apart
+    in `/usr/lib/spa-0.2-lhdc` so the stock ones stay) and `wireplumber-lhdc-config` (a drop-in
+    `wireplumber.service.d/50-lhdc.conf` with `SPA_PLUGIN_DIR=/usr/lib/spa-0.2-lhdc:/usr/lib/spa-0.2`,
+    so WirePlumber loads those first). Then restart WirePlumber and reconnect the device; the LHDC
+    profile appears as one more chip in «Music». `BluetoothCodecs` reads the device endpoints
+    (`busctl`, Savitech vendor bytes `58 5 0 0`) and, if the device has LHDC but it is not offered,
+    shows an «Install LHDC» button (`yay` in the floating terminal, then restarts WirePlumber) or,
+    with the plugin already there, asks to reconnect. To undo it: remove the three packages and
+    restart WirePlumber.
 - **Printers** (CUPS): installs whatever of `cups-filters ghostscript avahi nss-mdns` is missing
   (without Ghostscript nothing prints: "gstoraster filter failed") and enables the services. Printers with
   their state, default (per user), test page, resume and remove; the queue with each job's state,

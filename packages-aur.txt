@@ -24,3 +24,7 @@ limine-snapper-sync       # snapshots in the Limine menu
 
 # Not installed automatically (builds dlib, slow): face recognition, docs/SYSTEM.md
 #   yay -S howdy-git && sudo howdy add
+# Not installed automatically (builds PipeWire's Bluetooth plugins from git): LHDC codec, for
+# headphones such as the Nothing Ear (Settings → Bluetooth offers it), docs/QUICKSHELL.md
+#   yay -S liblhdcv5 pipewire-bluez5-lhdc-git wireplumber-lhdc-config
+#   systemctl --user daemon-reload && systemctl --user restart wireplumber
