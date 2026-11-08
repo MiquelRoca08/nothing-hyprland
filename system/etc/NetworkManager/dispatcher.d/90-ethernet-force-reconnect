@@ -1,0 +1,40 @@
+#!/bin/sh
+# When an Ethernet link comes up without a default route, reactivate its
+# connection once to request a fresh DHCP lease. Some USB Ethernet adapters
+# occasionally get a lease with an address but no gateway (IP4.GATEWAY: --),
+# so no default route is installed and all traffic stays on Wi-Fi even though
+# the cable is plugged in. Reactivating the connection fixes the lease, and
+# Ethernet (metric 100) then wins over Wi-Fi (metric 600). See docs/HARDWARE.md.
+iface="$1"
+action="$2"
+flag="/run/eth-force-reconnect.$iface"
+
+case "$action" in
+    down|pre-down) rm -f "$flag"; exit 0 ;;   # forget on unplug, retry on next plug-in
+    up|dhcp4-change) ;;
+    *) exit 0 ;;
+esac
+
+# Ethernet only (skip Wi-Fi, virtual and container interfaces).
+[ -e "/sys/class/net/$iface/wireless" ] && exit 0
+[ "$(nmcli -t -g GENERAL.TYPE device show "$iface" 2>/dev/null)" = ethernet ] || exit 0
+
+# A working default route through the cable means there is nothing to fix.
+if ip route show default dev "$iface" | grep -q .; then
+    rm -f "$flag"
+    exit 0
+fi
+
+# No gateway on the cable. Retry only once per plug-in: a lease that is
+# genuinely gatewayless must not loop reactivation forever.
+[ -e "$flag" ] && exit 0
+: > "$flag"
+
+uuid="${CONNECTION_UUID:-$(nmcli -t -g GENERAL.CON-UUID device show "$iface" 2>/dev/null)}"
+[ -n "$uuid" ] || exit 0
+
+logger -t eth-force-reconnect "no default route on $iface, reactivating $uuid"
+# Detach: NetworkManager would otherwise kill us for reactivating our own
+# connection from inside its own dispatch.
+setsid sh -c "sleep 3; nmcli connection up uuid '$uuid'" >/dev/null 2>&1 &
+exit 0

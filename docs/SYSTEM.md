@@ -289,6 +289,20 @@ hyprlock). It is optional and needs an IR camera. How the lock screen uses it:
   in the monitor's own menu.
 - The shell handles the rest: [QUICKSHELL.md](QUICKSHELL.md#brightness).
 
+## Networking
+
+- NetworkManager manages both Wi-Fi and Ethernet; the lower route metric wins, so a plugged
+  cable (Ethernet metric 100) takes over from Wi-Fi (metric 600) automatically.
+- **Ethernet without a gateway.** Some USB Ethernet adapters occasionally get a DHCP lease with an
+  address but no gateway (`nmcli device show <iface>` → `IP4.GATEWAY: --`). No default route is
+  then installed for the cable, so the link is up but all traffic stays on Wi-Fi. A NetworkManager
+  dispatcher script, `system/etc/NetworkManager/dispatcher.d/90-ethernet-force-reconnect`, detects
+  an Ethernet interface that comes up (or changes DHCP) without a default route and reactivates its
+  connection once to request a fresh lease. It acts only on Ethernet, retries once per plug-in
+  (a `/run/eth-force-reconnect.<iface>` flag, cleared on unplug) so a genuinely gatewayless lease
+  cannot loop, and detaches the reactivation with `setsid` so NetworkManager does not kill it
+  mid-dispatch. Logs under the `eth-force-reconnect` tag (`journalctl -t eth-force-reconnect`).
+
 ## Other
 
 - **Terminal apps from Nautilus** (nvim, etc.): apps with `Terminal=true` are launched with

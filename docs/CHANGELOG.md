@@ -260,6 +260,13 @@ It happened several times with different causes:
 - **12 Oct — Minecraft still missed wheel detents.** The kernel reported every detent, but XWayland
   received 0.6-step scrolls: the rule's `title = "^Minecraft"` never matched, because Hyprland
   matches rule patterns against the whole string. Now `class = "Minecraft.*"` in `conf/input.lua`.
+- **8 Nov — Cable plugged in but traffic on Wi-Fi.** The USB Ethernet adapter was linked and got an
+  IP by DHCP, but the lease arrived with no gateway (`IP4.GATEWAY: --`), so no default route was
+  installed for the cable and everything went out over Wi-Fi. `nmcli connection up` on the Ethernet
+  fixed the lease (Ethernet metric 100 then beat Wi-Fi's 600). New dispatcher script
+  `system/etc/NetworkManager/dispatcher.d/90-ethernet-force-reconnect` does this automatically, once
+  per plug-in, whenever an Ethernet interface comes up without a default route (see SYSTEM.md,
+  "Networking").
 
 ## Open items
 
